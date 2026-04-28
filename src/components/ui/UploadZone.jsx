@@ -1,21 +1,26 @@
 import { Upload } from 'lucide-react';
 
-export default function UploadZone({ label = 'Drop files here or click to browse', hint = '', onUpload }) {
+export default function UploadZone({ label, hint, onUpload }) {
+  function handleDrop(e) {
+    e.preventDefault();
+    onUpload?.();
+  }
+
   return (
-    <button
-      type="button"
+    <div
       onClick={onUpload}
-      className="w-full border-2 border-dashed border-gray-300 dark:border-gray-700
-        hover:border-brand-700 dark:hover:border-brand-700
-        bg-gray-50 dark:bg-gray-900/50 hover:bg-red-50 dark:hover:bg-red-900/10
-        rounded-xl p-8 flex flex-col items-center gap-3 cursor-pointer
-        transition-all duration-200 group"
+      onDrop={handleDrop}
+      onDragOver={e => e.preventDefault()}
+      className="border-2 border-dashed border-gray-700 hover:border-brand-700
+        rounded-xl p-8 text-center cursor-pointer transition-all duration-200
+        hover:bg-red-900/5 group"
     >
-      <Upload className="w-8 h-8 text-gray-400 group-hover:text-brand-700 transition-colors" strokeWidth={1.5} />
-      <div className="text-sm font-semibold text-gray-600 dark:text-gray-400 group-hover:text-brand-700 transition-colors">
-        {label}
-      </div>
-      {hint && <div className="text-xs text-gray-400">{hint}</div>}
-    </button>
+      <Upload
+        className="w-10 h-10 text-gray-600 group-hover:text-red-400 mx-auto mb-3 transition-colors"
+        strokeWidth={1.5}
+      />
+      <p className="text-gray-300 font-semibold text-sm">{label}</p>
+      {hint && <p className="text-gray-600 text-xs mt-1">{hint}</p>}
+    </div>
   );
 }

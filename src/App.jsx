@@ -15,18 +15,21 @@ import { useBookings } from './hooks/useBookings';
 const PUBLIC_PAGES = ['home', 'services', 'about', 'contact', 'portal'];
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(true);
   const [currentPage, setCurrentPage] = useState('home');
-  const [user, setUser] = useState(null);
+  // خلينا اليوزر الافتراضي Customer عشان يفتح عليه أول ما تعمل Login
+  const [user, setUser] = useState({ role: 'customer', name: 'John Doe' }); 
   const { message, showToast } = useToast();
   const bookingsApi = useBookings();
 
+  // إجبار الموقع كله إنه يشتغل على الـ Dark Mode دايماً
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-  }, [darkMode]);
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  }, []);
 
   function handleLogin(userData) {
-    setUser(userData);
+    // لو مفيش داتا مبعوتة، هيدخل كعميل كحالة افتراضية
+    setUser(userData || { role: 'customer', name: 'John Doe' });
     setCurrentPage('dashboard');
   }
 
@@ -36,7 +39,7 @@ export default function App() {
   }
 
   function handleNavigate(page) {
-    if (page === 'portal' && user) {
+    if (page === 'portal') {
       setCurrentPage('dashboard');
     } else {
       setCurrentPage(page);
@@ -44,26 +47,32 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  const isPortalPage = currentPage === 'dashboard';
+  // الدالة السحرية للتبديل بين الأدوار
+  function toggleRole() {
+    setUser(prev => ({
+      ...prev,
+      role: prev?.role === 'admin' ? 'customer' : 'admin',
+      name: prev?.role === 'admin' ? 'John Doe' : 'Mechanic Team'
+    }));
+  }
+
   const showPublicLayout = PUBLIC_PAGES.includes(currentPage);
 
   return (
-    <div className={`min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-white transition-colors duration-200`}>
+    <div className="min-h-screen bg-gray-950 text-white transition-colors duration-200">
       {showPublicLayout && (
         <Navbar
           currentPage={currentPage}
           onNavigate={handleNavigate}
-          darkMode={darkMode}
-          onToggleDark={() => setDarkMode(d => !d)}
         />
       )}
 
       <div className={showPublicLayout ? 'pt-[70px]' : ''}>
-        {currentPage === 'home'      && <Home onNavigate={handleNavigate} />}
-        {currentPage === 'services'  && <Services onNavigate={handleNavigate} />}
+        {currentPage === 'home'      && <Home      onNavigate={handleNavigate} />}
+        {currentPage === 'services'  && <Services  onNavigate={handleNavigate} />}
         {currentPage === 'about'     && <About />}
-        {currentPage === 'contact'   && <Contact showToast={showToast} />}
-        {currentPage === 'portal'    && <Portal onLogin={handleLogin} />}
+        {currentPage === 'contact'   && <Contact   showToast={showToast} />}
+        {currentPage === 'portal'    && <Portal    onLogin={handleLogin} />}
         {currentPage === 'dashboard' && (
           <Dashboard
             user={user}
@@ -71,8 +80,7 @@ export default function App() {
             onNavigate={handleNavigate}
             showToast={showToast}
             bookingsApi={bookingsApi}
-            darkMode={darkMode}
-            onToggleDark={() => setDarkMode(d => !d)}
+            onToggleRole={toggleRole} // بعتنا الدالة للداشبورد
           />
         )}
       </div>

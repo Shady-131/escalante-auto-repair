@@ -1,101 +1,63 @@
-import { Phone, MapPin, Wrench } from 'lucide-react';
+import { Phone, MapPin, MessageCircle } from 'lucide-react';
 
-const FOOTER_SERVICES = [
-  'Engine Repair', 'Brake Service', 'Oil Change',
-  'AC & Heating', 'Transmission', 'Electrical',
-];
+const LINKS = ['home', 'services', 'about', 'contact'];
 
 export default function Footer({ onNavigate }) {
   return (
-    <footer className="bg-gray-950 border-t-2 border-brand-700 text-gray-400">
-      <div className="max-w-7xl mx-auto px-6 pt-12 pb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
-
-          {/* Brand */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-brand-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                <Wrench className="w-4 h-4 text-white" strokeWidth={2.5} />
-                <span className="text-white font-extrabold text-sm">ESCALANTE</span>
-              </div>
-              <span className="text-white font-semibold text-sm">Auto Repair</span>
+    <footer className="bg-gray-950 border-t border-gray-800 py-12 px-6">
+      <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+        {/* Brand */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="bg-brand-700 px-2.5 py-1.5 rounded-lg">
+              <span className="text-white font-extrabold text-xs">ESC</span>
             </div>
-            <p className="text-sm leading-relaxed mb-4">
-              Utah's trusted auto repair shop. Professional, honest, and affordable service for every vehicle.
-            </p>
-            <div className="flex gap-2">
-              {['f', '𝕏', 'in', '⭐'].map((s, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="w-9 h-9 rounded-lg bg-gray-900 border border-gray-800
-                    flex items-center justify-center text-sm text-gray-500
-                    hover:bg-brand-700 hover:text-white hover:border-brand-700
-                    transition-all duration-150"
-                >
-                  {s}
-                </a>
-              ))}
+            <div>
+              <p className="text-white font-bold text-sm">Escalante Auto Repair</p>
+              <p className="text-gray-500 text-xs">Utah's Trusted Mechanics</p>
             </div>
           </div>
+          <p className="text-gray-500 text-sm leading-relaxed">
+            Honest, affordable, and high-quality auto repair for every vehicle.
+          </p>
+        </div>
 
-          {/* Navigation */}
-          <div>
-            <h4 className="text-white font-bold text-sm uppercase tracking-wide mb-4">Navigation</h4>
-            {['home', 'services', 'about', 'contact'].map(p => (
-              <button
-                key={p}
-                onClick={() => onNavigate(p)}
-                className="block text-sm mb-2 capitalize hover:text-red-400 transition-colors text-left"
-              >
+        {/* Quick links */}
+        <div>
+          <h4 className="text-white font-bold text-sm mb-4">Quick Links</h4>
+          <div className="flex flex-col gap-2">
+            {LINKS.map(p => (
+              <button key={p} onClick={() => onNavigate(p)}
+                className="text-gray-500 hover:text-red-400 text-sm capitalize text-left transition-colors w-fit">
                 {p}
               </button>
             ))}
-            <button
-              onClick={() => onNavigate('portal')}
-              className="block text-sm mb-2 hover:text-red-400 transition-colors text-left"
-            >
-              Customer Portal
-            </button>
           </div>
+        </div>
 
-          {/* Services */}
-          <div>
-            <h4 className="text-white font-bold text-sm uppercase tracking-wide mb-4">Services</h4>
-            {FOOTER_SERVICES.map(s => (
-              <p key={s} className="text-sm mb-2">{s}</p>
-            ))}
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="text-white font-bold text-sm uppercase tracking-wide mb-4">Contact</h4>
+        {/* Contact */}
+        <div>
+          <h4 className="text-white font-bold text-sm mb-4">Contact</h4>
+          <div className="flex flex-col gap-3">
             <a href="tel:+14352338048"
-              className="flex items-center gap-2 text-sm mb-3 hover:text-red-400 transition-colors">
-              <Phone className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-              +1 435-233-8048
+              className="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm transition-colors">
+              <Phone className="w-4 h-4 shrink-0" /> 435-233-8048
             </a>
-            <a
-              href="https://maps.app.goo.gl/ckFp17UG6B5LYCD28"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 text-sm mb-3 hover:text-red-400 transition-colors"
-            >
-              <MapPin className="w-4 h-4 shrink-0" strokeWidth={1.75} />
-              Utah, USA — Get Directions
+            <a href="https://maps.app.goo.gl/ckFp17UG6B5LYCD28" target="_blank" rel="noreferrer"
+              className="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm transition-colors">
+              <MapPin className="w-4 h-4 shrink-0" /> Utah, USA
             </a>
-            <p className="text-sm">Mon–Fri: 8am–6pm</p>
-            <p className="text-sm">Saturday: 8am–4pm</p>
+            <a href="https://wa.me/14352338048" target="_blank" rel="noreferrer"
+              className="flex items-center gap-2 text-gray-500 hover:text-red-400 text-sm transition-colors">
+              <MessageCircle className="w-4 h-4 shrink-0" /> WhatsApp
+            </a>
           </div>
         </div>
+      </div>
 
-        <div className="border-t border-gray-800 pt-5 flex flex-col sm:flex-row
-          justify-between items-center gap-2 text-xs text-gray-600">
-          <span>© 2026 Escalante Auto Repair · Utah, USA · All rights reserved.</span>
-          <a href="tel:+14352338048" className="text-red-700 hover:text-red-400 transition-colors font-medium">
-            435-233-8048
-          </a>
-        </div>
+      <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-gray-800
+        text-center text-gray-600 text-xs">
+        © 2026 Escalante Auto Repair. All rights reserved.
       </div>
     </footer>
   );

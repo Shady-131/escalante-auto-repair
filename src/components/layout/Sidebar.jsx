@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, CalendarDays, ClipboardList, MapPin,
-  Camera, CreditCard, BarChart2, RefreshCw, Image,
-  StickyNote, LogOut, ChevronRight,
+  Camera, CreditCard, BarChart2, Image,
+  StickyNote, LogOut, ChevronRight, Package,
 } from 'lucide-react';
 
 const CUSTOMER_NAV = [
@@ -14,30 +14,25 @@ const CUSTOMER_NAV = [
 ];
 
 const ADMIN_NAV = [
-  { icon: BarChart2,    label: 'Analytics',        view: 'overview'  },
-  { icon: CalendarDays, label: 'Manage Bookings',  view: 'bookings'  },
-  { icon: RefreshCw,    label: 'Update Status',    view: 'status'    },
-  { icon: Image,        label: 'Before / After',   view: 'photos'    },
-  { icon: StickyNote,   label: 'Technician Notes', view: 'notes'     },
+  { icon: BarChart2,    label: 'Overview',         view: 'overview'   },
+  { icon: Package,      label: 'Spare Parts',      view: 'inventory'  },
+  { icon: Image,        label: 'Before / After',   view: 'photos'     },
+  { icon: StickyNote,   label: 'Technician Notes', view: 'notes'      },
 ];
 
 export default function Sidebar({ role, user, activeView, onChangeView, onLogout }) {
   const navItems = role === 'admin' ? ADMIN_NAV : CUSTOMER_NAV;
   const initials = user?.name
-    ?.split(' ')
-    .map(w => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() ?? 'U';
+    ?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() ?? 'U';
 
   return (
     <aside className="w-60 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0
       sticky top-0 h-screen overflow-y-auto">
 
-      {/* Logo strip */}
+      {/* Logo */}
       <div className="h-[70px] flex items-center px-4 border-b border-gray-800 shrink-0">
         <div className="flex items-center gap-2">
-          <div className="bg-brand-700 px-2.5 py-1.5 rounded-lg">
+          <div className="bg-red-600 px-2.5 py-1.5 rounded-lg">
             <span className="text-white font-extrabold text-xs tracking-wide">ESC</span>
           </div>
           <div>
@@ -47,9 +42,9 @@ export default function Sidebar({ role, user, activeView, onChangeView, onLogout
         </div>
       </div>
 
-      {/* User */}
+      {/* User info */}
       <div className="px-4 py-5 border-b border-gray-800">
-        <div className="w-11 h-11 rounded-full bg-brand-700 flex items-center justify-center
+        <div className="w-11 h-11 rounded-full bg-red-600 flex items-center justify-center
           font-bold text-white text-sm mb-3">
           {initials}
         </div>
@@ -61,7 +56,7 @@ export default function Sidebar({ role, user, activeView, onChangeView, onLogout
         </p>
       </div>
 
-      {/* Nav items */}
+      {/* Nav */}
       <nav className="flex-1 py-3">
         {navItems.map(({ icon: Icon, label, view }) => {
           const active = activeView === view;
@@ -72,7 +67,7 @@ export default function Sidebar({ role, user, activeView, onChangeView, onLogout
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium
                 transition-all duration-150 border-l-[3px] group
                 ${active
-                  ? 'border-brand-700 bg-red-900/20 text-white'
+                  ? 'border-red-600 bg-red-900/20 text-white'
                   : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800/60'}`}
             >
               <Icon
@@ -92,8 +87,8 @@ export default function Sidebar({ role, user, activeView, onChangeView, onLogout
         <button
           onClick={onLogout}
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm
-            text-gray-500 border border-gray-700 hover:border-brand-700 hover:text-red-400
-            transition-all duration-150"
+            text-gray-500 border border-gray-700
+            hover:border-red-600 hover:text-red-400 transition-all duration-150"
         >
           <LogOut className="w-4 h-4" strokeWidth={1.75} />
           Sign Out

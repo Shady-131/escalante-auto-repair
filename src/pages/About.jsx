@@ -1,13 +1,13 @@
+import { Wrench, BadgeCheck, ShieldCheck, DollarSign, Clock, Camera } from 'lucide-react';
 import SectionHeader from '../components/ui/SectionHeader';
 import StatCard from '../components/ui/StatCard';
-import { BadgeCheck, ShieldCheck, DollarSign, Clock, Camera } from 'lucide-react';
 
 const TRUST = [
-  { Icon: BadgeCheck,  text: 'ASE Certified Technicians' },
-  { Icon: ShieldCheck, text: 'Warranty on All Repairs' },
-  { Icon: DollarSign,  text: 'No Surprise Fees — Free Estimates' },
+  { Icon: BadgeCheck,  text: 'ASE Certified Technicians'               },
+  { Icon: ShieldCheck, text: 'Warranty on All Repairs'                 },
+  { Icon: DollarSign,  text: 'No Surprise Fees — Free Estimates'       },
   { Icon: Clock,       text: 'Fast Turnaround — Same Day Service Available' },
-  { Icon: Camera,      text: 'Before & After Photos Provided' },
+  { Icon: Camera,      text: 'Before & After Photos Provided'          },
 ];
 
 const ABOUT_STATS = [
@@ -36,11 +36,9 @@ export default function About() {
             </p>
             <div className="flex flex-col gap-3">
               {TRUST.map(({ Icon, text }) => (
-                <div
-                  key={text}
+                <div key={text}
                   className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800
-                    border-l-4 border-brand-700 rounded-r-xl px-4 py-3"
-                >
+                    border-l-4 border-brand-700 rounded-r-xl px-4 py-3">
                   <Icon className="w-5 h-5 text-brand-700 dark:text-red-400 shrink-0" strokeWidth={1.75} />
                   <span className="font-semibold text-sm text-gray-800 dark:text-gray-200">{text}</span>
                 </div>
@@ -50,13 +48,15 @@ export default function About() {
 
           <div className="bg-gradient-to-br from-gray-900 via-[#1a0505] to-gray-900
             rounded-2xl p-8 border-2 border-red-900/40 text-center">
-            <div className="text-7xl mb-4">🔧</div>
+            {/* ✅ FIX: replaced 🔧 emoji with Lucide Wrench icon */}
+            <div className="flex justify-center mb-4">
+              <Wrench className="w-20 h-20 text-red-500/70" strokeWidth={1} />
+            </div>
             <div className="text-white text-2xl font-black mb-1">10+ Years</div>
             <div className="text-gray-400 text-sm mb-8">Serving Utah's Auto Repair Needs</div>
             <div className="grid grid-cols-2 gap-3">
               {ABOUT_STATS.map(s => (
-                <div key={s.label}
-                  className="bg-white/5 rounded-xl p-4 text-center">
+                <div key={s.label} className="bg-white/5 rounded-xl p-4 text-center">
                   <div className="text-red-400 text-xl font-black">{s.value}</div>
                   <div className="text-gray-500 text-xs mt-0.5">{s.label}</div>
                 </div>

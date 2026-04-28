@@ -1,35 +1,30 @@
 export default function InputField({
-  label,
-  id,
-  type = 'text',
-  as = 'input',
-  children,
-  className = '',
-  ...rest
+  id, label, as: Tag = 'input',
+  className = '', children, type, ...props
 }) {
-  const base =
-    'w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-700 ' +
-    'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ' +
-    'placeholder-gray-400 dark:placeholder-gray-600 text-sm ' +
-    'focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent ' +
-    'transition-colors duration-150';
+  // Only pass `type` to <input> to avoid console warnings on <select>/<textarea>
+  const tagProps = Tag === 'input' ? { type, ...props } : props;
 
   return (
-    <div className={`flex flex-col gap-1.5 ${className}`}>
+    <div>
       {label && (
-        <label htmlFor={id} className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+        <label htmlFor={id}
+          className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">
           {label}
         </label>
       )}
-      {as === 'textarea' ? (
-        <textarea id={id} className={`${base} min-h-[120px] resize-y`} {...rest} />
-      ) : as === 'select' ? (
-        <select id={id} className={base} {...rest}>
-          {children}
-        </select>
-      ) : (
-        <input id={id} type={type} className={base} {...rest} />
-      )}
+      <Tag
+        id={id}
+        className={`w-full px-4 py-2.5 rounded-xl border border-gray-700 bg-gray-800
+          text-gray-100 placeholder-gray-600 text-sm
+          focus:outline-none focus:ring-2 focus:ring-brand-700 focus:border-transparent
+          transition-all duration-150
+          ${Tag === 'textarea' ? 'min-h-[120px] resize-y' : ''}
+          ${className}`}
+        {...tagProps}
+      >
+        {children}
+      </Tag>
     </div>
   );
 }

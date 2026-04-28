@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   CalendarDays, CheckCircle, Clock, MapPin,
-  CreditCard, Upload, Star, Wrench, Car,
+  CreditCard, Star, Wrench, Car,
   ArrowRight, AlertCircle, Phone,
 } from 'lucide-react';
 import Badge from '../../components/ui/Badge';
@@ -11,8 +11,8 @@ import InputField from '../../components/ui/InputField';
 import UploadZone from '../../components/ui/UploadZone';
 import { CUSTOMER_HISTORY, TRACK_STEPS, SERVICES } from '../../data/mockData';
 
-// ─── Overview View ────────────────────────────────────────────────────────────
-function OverviewView({ user }) {
+/* ─── Overview ────────────────────────────────────────────────────────────── */
+function OverviewView({ user, onChangeView }) {
   const UPCOMING = [
     { id: 'ESC-2026-047', service: 'Brake Pad Replacement', date: 'Apr 20, 2026', time: '9:00 AM', status: 'In Progress' },
   ];
@@ -26,18 +26,19 @@ function OverviewView({ user }) {
           <p className="text-red-400 text-xs uppercase tracking-widest font-semibold mb-1">Welcome back</p>
           <h2 className="text-white text-2xl font-extrabold">{user?.name}</h2>
           <p className="text-gray-400 text-sm mt-1">
-            You have <strong className="text-white">1 active repair</strong> and your vehicle is <strong className="text-yellow-400">In Progress</strong>.
+            You have <strong className="text-white">1 active repair</strong> and your vehicle is{' '}
+            <strong className="text-yellow-400">In Progress</strong>.
           </p>
         </div>
-        <div className="text-5xl hidden sm:block select-none">🚗</div>
+        {/* ✅ FIX: replaced 🚗 emoji with Lucide Car icon */}
+        <Car className="w-16 h-16 text-red-500/40 hidden sm:block" strokeWidth={0.75} />
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard value="3"     label="Total Visits"    sub="All time"     />
-        <StatCard value="1"     label="Active Jobs"     sub="Right now"    />
-        <StatCard value="$392"  label="Total Spent"     sub="This year"    />
-        <StatCard value="5★"    label="Your Rating"     sub="Thank you!"   />
+        <StatCard value="3"    label="Total Visits"  sub="All time"   />
+        <StatCard value="1"    label="Active Jobs"   sub="Right now"  />
+        <StatCard value="$392" label="Total Spent"   sub="This year"  />
+        <StatCard value="5★"   label="Your Rating"   sub="Thank you!" />
       </div>
 
       {/* Active repair */}
@@ -58,59 +59,48 @@ function OverviewView({ user }) {
         ))}
       </div>
 
-      {/* Quick actions */}
+      {/* ✅ FIX: Quick actions now call onChangeView to navigate */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { icon: CalendarDays, label: 'Book New Service',    desc: 'Schedule an appointment',  color: 'text-blue-400',  bg: 'bg-blue-900/20  border-blue-800/40',  view: 'book'    },
-          { icon: MapPin,       label: 'Track My Repair',     desc: 'Live repair status',        color: 'text-amber-400', bg: 'bg-amber-900/20 border-amber-800/40', view: 'track'   },
-          { icon: CreditCard,   label: 'View Invoices',       desc: 'Payments & receipts',       color: 'text-green-400', bg: 'bg-green-900/20 border-green-800/40', view: 'payment' },
-        ].map(({ icon: Icon, label, desc, color, bg }) => (
-          <div key={label}
-            className={`border rounded-xl p-4 cursor-pointer hover:-translate-y-0.5 transition-all
-              duration-200 hover:shadow-lg ${bg}`}>
+          { Icon: CalendarDays, label: 'Book New Service', desc: 'Schedule an appointment', color: 'text-blue-400',  bg: 'bg-blue-900/20  border-blue-800/40',  view: 'book'    },
+          { Icon: MapPin,       label: 'Track My Repair',  desc: 'Live repair status',       color: 'text-amber-400',bg: 'bg-amber-900/20 border-amber-800/40', view: 'track'   },
+          { Icon: CreditCard,   label: 'View Invoices',    desc: 'Payments & receipts',      color: 'text-green-400',bg: 'bg-green-900/20 border-green-800/40', view: 'payment' },
+        ].map(({ Icon, label, desc, color, bg, view }) => (
+          <button
+            key={label}
+            onClick={() => onChangeView(view)}
+            className={`text-left border rounded-xl p-4 hover:-translate-y-0.5 transition-all
+              duration-200 hover:shadow-lg ${bg}`}
+          >
             <Icon className={`w-6 h-6 ${color} mb-2`} strokeWidth={1.75} />
             <p className="text-white font-semibold text-sm">{label}</p>
             <p className="text-gray-500 text-xs mt-0.5">{desc}</p>
-          </div>
+          </button>
         ))}
       </div>
     </div>
   );
 }
 
-// ─── Book Appointment View ────────────────────────────────────────────────────
+/* ─── Book Appointment ────────────────────────────────────────────────────── */
 function BookView({ showToast, addBooking }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({
-    vehicle: '', year: '', service: '', date: '', time: '', notes: '',
-  });
+  const [form, setForm] = useState({ vehicle: '', year: '', service: '', date: '', time: '', notes: '' });
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
 
   function handleNext() {
-    if (step === 1 && (!form.vehicle || !form.year)) {
-      showToast('⚠️ Please enter your vehicle details.'); return;
-    }
-    if (step === 2 && !form.service) {
-      showToast('⚠️ Please select a service.'); return;
-    }
-    if (step === 3 && (!form.date || !form.time)) {
-      showToast('⚠️ Please pick a date and time.'); return;
-    }
+    if (step === 1 && (!form.vehicle || !form.year)) { showToast('⚠️ Please enter your vehicle details.'); return; }
+    if (step === 2 && !form.service)                 { showToast('⚠️ Please select a service.');          return; }
+    if (step === 3 && (!form.date || !form.time))    { showToast('⚠️ Please pick a date and time.');      return; }
     setStep(s => Math.min(s + 1, 4));
   }
 
   function handleConfirm() {
     const id = `ESC-2026-0${Math.floor(Math.random() * 90) + 10}`;
-    addBooking({
-      id,
-      customer: 'John Doe',
-      vehicle: `${form.year} ${form.vehicle}`,
-      service: form.service,
-      date: form.date,
-      status: 'Scheduled',
-    });
-    showToast(`✅ Appointment booked! Booking ID: ${id}`);
+    addBooking({ id, customer: 'John Doe', vehicle: `${form.year} ${form.vehicle}`,
+      service: form.service, date: form.date, status: 'Scheduled' });
+    showToast(`✅ Appointment booked! ID: ${id}`);
     setStep(1);
     setForm({ vehicle: '', year: '', service: '', date: '', time: '', notes: '' });
   }
@@ -123,7 +113,7 @@ function BookView({ showToast, addBooking }) {
       <div className="flex items-center">
         {STEP_LABELS.map((label, i) => {
           const n = i + 1;
-          const done = step > n;
+          const done   = step > n;
           const active = step === n;
           return (
             <div key={label} className="flex-1 flex items-center">
@@ -150,7 +140,6 @@ function BookView({ showToast, addBooking }) {
       </div>
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-        {/* Step 1 – Vehicle */}
         {step === 1 && (
           <div className="space-y-4">
             <h3 className="text-white font-bold text-lg">Your Vehicle</h3>
@@ -158,35 +147,30 @@ function BookView({ showToast, addBooking }) {
               <InputField label="Make & Model" id="make" placeholder="e.g. Honda Civic"
                 value={form.vehicle} onChange={e => set('vehicle', e.target.value)} />
               <InputField label="Year" id="year" placeholder="e.g. 2019"
-                value={form.year} onChange={e => set('year', e.target.value)} />
+                value={form.year}    onChange={e => set('year',    e.target.value)} />
             </div>
           </div>
         )}
 
-        {/* Step 2 – Service */}
         {step === 2 && (
           <div className="space-y-4">
             <h3 className="text-white font-bold text-lg">Select Service</h3>
             <div className="grid sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
-              {SERVICES.map(s => (
-                <button
-                  key={s.title}
-                  onClick={() => set('service', s.title)}
+              {SERVICES.map(({ title, Icon, price }) => (
+                <button key={title} onClick={() => set('service', title)}
                   className={`text-left p-3 rounded-xl border text-sm transition-all
-                    ${form.service === s.title
+                    ${form.service === title
                       ? 'border-brand-700 bg-red-900/20 text-white'
-                      : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'}`}
-                >
-                  <span className="text-lg mr-2">{s.icon}</span>
-                  <span className="font-semibold">{s.title}</span>
-                  <span className="text-red-400 text-xs block mt-0.5">{s.price}</span>
+                      : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300'}`}>
+                  <Icon className="w-5 h-5 mb-1 text-red-400" strokeWidth={1.75} />
+                  <span className="font-semibold block">{title}</span>
+                  <span className="text-red-400 text-xs">{price}</span>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Step 3 – Schedule */}
         {step === 3 && (
           <div className="space-y-4">
             <h3 className="text-white font-bold text-lg">Pick a Date & Time</h3>
@@ -196,9 +180,8 @@ function BookView({ showToast, addBooking }) {
               <InputField label="Preferred Time" id="time" as="select"
                 value={form.time} onChange={e => set('time', e.target.value)}>
                 <option value="">Select time…</option>
-                {['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM','4:00 PM'].map(t =>
-                  <option key={t}>{t}</option>
-                )}
+                {['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM','4:00 PM']
+                  .map(t => <option key={t}>{t}</option>)}
               </InputField>
             </div>
             <InputField label="Additional Notes (optional)" id="notes" as="textarea"
@@ -207,17 +190,16 @@ function BookView({ showToast, addBooking }) {
           </div>
         )}
 
-        {/* Step 4 – Confirm */}
         {step === 4 && (
           <div className="space-y-4">
             <h3 className="text-white font-bold text-lg">Confirm Booking</h3>
             <div className="bg-gray-800 border border-gray-700 rounded-xl divide-y divide-gray-700">
               {[
-                { label: 'Vehicle',  value: `${form.year} ${form.vehicle}` },
-                { label: 'Service',  value: form.service },
-                { label: 'Date',     value: form.date },
-                { label: 'Time',     value: form.time },
-                { label: 'Notes',    value: form.notes || '—' },
+                { label: 'Vehicle', value: `${form.year} ${form.vehicle}` },
+                { label: 'Service', value: form.service   },
+                { label: 'Date',    value: form.date      },
+                { label: 'Time',    value: form.time      },
+                { label: 'Notes',   value: form.notes || '—' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between items-center px-4 py-3">
                   <span className="text-gray-500 text-sm">{label}</span>
@@ -230,26 +212,18 @@ function BookView({ showToast, addBooking }) {
       </div>
 
       <div className="flex justify-between">
-        {step > 1 ? (
-          <Button variant="secondary" size="md" onClick={() => setStep(s => s - 1)}>
-            ← Back
-          </Button>
-        ) : <div />}
-        {step < 4 ? (
-          <Button variant="primary" size="md" onClick={handleNext}>
-            Next <ArrowRight className="w-4 h-4" />
-          </Button>
-        ) : (
-          <Button variant="primary" size="md" onClick={handleConfirm}>
-            <CalendarDays className="w-4 h-4" /> Confirm Appointment
-          </Button>
-        )}
+        {step > 1
+          ? <Button variant="secondary" size="md" onClick={() => setStep(s => s - 1)}>← Back</Button>
+          : <div />}
+        {step < 4
+          ? <Button variant="primary" size="md" onClick={handleNext}>Next <ArrowRight className="w-4 h-4" /></Button>
+          : <Button variant="primary" size="md" onClick={handleConfirm}><CalendarDays className="w-4 h-4" /> Confirm Appointment</Button>}
       </div>
     </div>
   );
 }
 
-// ─── Service History View ─────────────────────────────────────────────────────
+/* ─── History ─────────────────────────────────────────────────────────────── */
 function HistoryView() {
   return (
     <div className="space-y-5 animate-fade-in">
@@ -262,10 +236,8 @@ function HistoryView() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-800">
-                {['Date', 'Service', 'Vehicle', 'Technician', 'Cost', 'Status'].map(h => (
-                  <th key={h} className="text-left text-gray-500 text-xs uppercase tracking-wide px-5 py-3 font-semibold whitespace-nowrap">
-                    {h}
-                  </th>
+                {['Date','Service','Vehicle','Technician','Cost','Status'].map(h => (
+                  <th key={h} className="text-left text-gray-500 text-xs uppercase tracking-wide px-5 py-3 font-semibold whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -284,22 +256,19 @@ function HistoryView() {
           </table>
         </div>
       </div>
-
-      {/* Total spend summary */}
       <div className="grid grid-cols-3 gap-4">
-        <StatCard value="5"     label="Total Services" />
-        <StatCard value="$392"  label="Total Spent"    />
-        <StatCard value="2"     label="Vehicles"       />
+        <StatCard value="5"    label="Total Services" />
+        <StatCard value="$392" label="Total Spent"    />
+        <StatCard value="2"    label="Vehicles"       />
       </div>
     </div>
   );
 }
 
-// ─── Track Repair View ────────────────────────────────────────────────────────
+/* ─── Track ───────────────────────────────────────────────────────────────── */
 function TrackView() {
   return (
     <div className="max-w-xl mx-auto space-y-5 animate-fade-in">
-      {/* Active job card */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -314,32 +283,24 @@ function TrackView() {
         </div>
       </div>
 
-      {/* Progress steps */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <h3 className="text-white font-bold text-sm mb-5">Repair Progress</h3>
         <div className="space-y-0">
           {TRACK_STEPS.map((step, i) => (
             <div key={step.label} className="flex gap-4">
-              {/* Icon column */}
               <div className="flex flex-col items-center">
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border-2 transition-all
-                  ${step.done
-                    ? 'bg-green-600 border-green-600 text-white'
-                    : step.active
-                    ? 'bg-brand-700 border-brand-700 text-white ring-4 ring-brand-700/25'
-                    : 'bg-gray-800 border-gray-700 text-gray-600'}`}>
-                  {step.done
-                    ? <CheckCircle className="w-4 h-4" />
-                    : step.active
-                    ? <Wrench className="w-4 h-4 animate-spin-slow" />
-                    : <Clock className="w-4 h-4" />}
+                  ${step.done   ? 'bg-green-600 border-green-600 text-white' :
+                    step.active ? 'bg-brand-700 border-brand-700 text-white ring-4 ring-brand-700/25' :
+                                  'bg-gray-800 border-gray-700 text-gray-600'}`}>
+                  {step.done   ? <CheckCircle className="w-4 h-4" /> :
+                   step.active ? <Wrench className="w-4 h-4 animate-spin-slow" /> :
+                                 <Clock className="w-4 h-4" />}
                 </div>
                 {i < TRACK_STEPS.length - 1 && (
-                  <div className={`w-0.5 h-10 my-0.5 transition-colors
-                    ${step.done ? 'bg-green-600' : 'bg-gray-700'}`} />
+                  <div className={`w-0.5 h-10 my-0.5 transition-colors ${step.done ? 'bg-green-600' : 'bg-gray-700'}`} />
                 )}
               </div>
-              {/* Content */}
               <div className="pb-8">
                 <p className={`font-semibold text-sm
                   ${step.done ? 'text-green-400' : step.active ? 'text-white' : 'text-gray-500'}`}>
@@ -362,7 +323,6 @@ function TrackView() {
         </div>
       </div>
 
-      {/* Contact shop */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-4">
         <div className="w-11 h-11 rounded-xl bg-brand-700/20 border border-brand-700/30
           flex items-center justify-center shrink-0">
@@ -378,14 +338,14 @@ function TrackView() {
   );
 }
 
-// ─── Upload Images View ───────────────────────────────────────────────────────
+/* ─── Upload ──────────────────────────────────────────────────────────────── */
 function UploadView({ showToast }) {
   return (
     <div className="max-w-xl mx-auto space-y-5 animate-fade-in">
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
         <h3 className="text-white font-bold text-sm mb-1">Upload Vehicle Photos</h3>
         <p className="text-gray-400 text-sm mb-5">
-          Share photos of the damage or issue so our technicians can prepare before your visit.
+          Share photos of the damage so our technicians can prepare before your visit.
         </p>
         <UploadZone
           label="Drop images here or click to browse"
@@ -393,13 +353,12 @@ function UploadView({ showToast }) {
           onUpload={() => showToast('📤 File upload feature coming soon!')}
         />
       </div>
-
       <div className="bg-yellow-900/10 border border-yellow-800/30 rounded-xl p-4 flex gap-3">
         <AlertCircle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" strokeWidth={1.75} />
         <div>
           <p className="text-yellow-300 font-semibold text-sm">Tip</p>
           <p className="text-yellow-400/70 text-sm mt-0.5">
-            Clear photos of the affected area help us diagnose faster and save you time during the visit.
+            Clear photos of the affected area help us diagnose faster and save you time.
           </p>
         </div>
       </div>
@@ -407,17 +366,16 @@ function UploadView({ showToast }) {
   );
 }
 
-// ─── Payment View ─────────────────────────────────────────────────────────────
+/* ─── Payment ─────────────────────────────────────────────────────────────── */
 function PaymentView({ showToast }) {
   const INVOICES = [
-    { id: 'INV-2026-031', date: 'Apr 20, 2026', service: 'Brake Pad Replacement', amount: '$189.00', status: 'Pending' },
-    { id: 'INV-2026-019', date: 'Mar 15, 2026', service: 'Full Synthetic Oil Change', amount: '$65.00', status: 'Completed' },
-    { id: 'INV-2026-007', date: 'Feb 02, 2026', service: 'AC Recharge R134a', amount: '$89.00', status: 'Completed' },
+    { id: 'INV-2026-031', date: 'Apr 20, 2026', service: 'Brake Pad Replacement',    amount: '$189.00', status: 'Pending'   },
+    { id: 'INV-2026-019', date: 'Mar 15, 2026', service: 'Full Synthetic Oil Change', amount: '$65.00',  status: 'Completed' },
+    { id: 'INV-2026-007', date: 'Feb 02, 2026', service: 'AC Recharge R134a',         amount: '$89.00',  status: 'Completed' },
   ];
 
   return (
     <div className="space-y-5 animate-fade-in">
-      {/* Balance card */}
       <div className="bg-gradient-to-br from-gray-900 via-[#1a0505] to-gray-900
         border border-red-900/40 rounded-xl p-6">
         <p className="text-gray-400 text-xs uppercase tracking-widest font-semibold mb-1">Balance Due</p>
@@ -433,7 +391,6 @@ function PaymentView({ showToast }) {
         </div>
       </div>
 
-      {/* Invoice list */}
       <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-800 bg-gray-800/40">
           <h3 className="text-white font-bold text-sm">Invoice History</h3>
@@ -460,13 +417,12 @@ function PaymentView({ showToast }) {
   );
 }
 
-// ─── Main CustomerDashboard ───────────────────────────────────────────────────
-export default function CustomerDashboard({ activeView, user, bookingsApi, showToast }) {
+/* ─── Main ────────────────────────────────────────────────────────────────── */
+export default function CustomerDashboard({ activeView, onChangeView, user, bookingsApi, showToast }) {
   const { addBooking } = bookingsApi;
-
   return (
     <div>
-      {activeView === 'overview' && <OverviewView user={user} />}
+      {activeView === 'overview' && <OverviewView user={user} onChangeView={onChangeView} />}
       {activeView === 'book'     && <BookView     showToast={showToast} addBooking={addBooking} />}
       {activeView === 'history'  && <HistoryView  />}
       {activeView === 'track'    && <TrackView    />}

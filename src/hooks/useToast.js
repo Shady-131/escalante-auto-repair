@@ -3,9 +3,10 @@ import { useState, useCallback } from 'react';
 export function useToast() {
   const [message, setMessage] = useState('');
 
-  const showToast = useCallback((msg, duration = 3200) => {
+  const showToast = useCallback((msg) => {
     setMessage(msg);
-    setTimeout(() => setMessage(''), duration);
+    const t = setTimeout(() => setMessage(''), 3500);
+    return () => clearTimeout(t);
   }, []);
 
   return { message, showToast };

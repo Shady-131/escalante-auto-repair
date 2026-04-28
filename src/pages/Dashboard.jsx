@@ -1,12 +1,18 @@
 import { useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { Users } from 'lucide-react'; // ضفنا أيقونة جديدة لزرار التبديل
 import Sidebar from '../components/layout/Sidebar';
 import AdminDashboard from './dashboard/AdminDashboard';
 import CustomerDashboard from './dashboard/CustomerDashboard';
 
-export default function Dashboard({ user, onLogout, onNavigate, showToast, bookingsApi, darkMode, onToggleDark }) {
+export default function Dashboard({ user, onLogout, onNavigate, showToast, bookingsApi, onToggleRole }) {
   const isAdmin = user?.role === 'admin';
-  const [activeView, setActiveView] = useState(isAdmin ? 'overview' : 'overview');
+  const [activeView, setActiveView] = useState('overview');
+
+  // دالة عشان لما نبدل بين الأدوار، يرجعنا دايماً لصفحة الـ Overview وميحصلش كراش
+  const handleRoleSwitch = () => {
+    setActiveView('overview');
+    onToggleRole();
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-950">
@@ -19,7 +25,6 @@ export default function Dashboard({ user, onLogout, onNavigate, showToast, booki
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Dashboard top bar */}
         <header className="sticky top-0 z-40 bg-gray-950/95 backdrop-blur-md border-b border-gray-800
           flex items-center justify-between px-6 h-[70px]">
           <div>
@@ -30,21 +35,24 @@ export default function Dashboard({ user, onLogout, onNavigate, showToast, booki
               Welcome back, <span className="text-red-400 font-semibold">{user?.name}</span>
             </p>
           </div>
+          
           <div className="flex items-center gap-3">
+            {/* زرار التبديل بين الميكانيكي والعميل (للعرض فقط) */}
+            <button
+              onClick={handleRoleSwitch}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg
+                bg-red-900/20 text-red-400 border border-red-900/40 hover:bg-red-900/40 transition-colors"
+            >
+              <Users className="w-3.5 h-3.5" />
+              View as {isAdmin ? 'Customer' : 'Admin'}
+            </button>
+
             <button
               onClick={() => onNavigate('home')}
               className="text-xs text-gray-500 hover:text-red-400 transition-colors border border-gray-700
-                hover:border-brand-700 rounded-lg px-3 py-1.5 font-medium"
+                hover:border-red-600 rounded-lg px-3 py-1.5 font-medium"
             >
               ← Back to Site
-            </button>
-            <button
-              onClick={onToggleDark}
-              aria-label="Toggle dark mode"
-              className="p-2 rounded-lg border border-gray-700 text-gray-400
-                hover:border-brand-700 hover:text-red-400 transition-all duration-150"
-            >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
           </div>
         </header>

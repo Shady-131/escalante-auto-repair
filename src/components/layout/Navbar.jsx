@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Phone, CalendarDays, Moon, Sun, Menu, X, Wrench } from 'lucide-react';
-import Button from '../ui/Button';
+import { Menu, X, Wrench } from 'lucide-react';
 
 const NAV_LINKS = [
   { label: 'Home',     page: 'home'     },
@@ -9,106 +8,70 @@ const NAV_LINKS = [
   { label: 'Contact',  page: 'contact'  },
 ];
 
-export default function Navbar({ currentPage, onNavigate, darkMode, onToggleDark }) {
+export default function Navbar({ currentPage, onNavigate }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   function go(page) {
-    onNavigate(page);
+    if (page === 'portal') {
+      onNavigate('dashboard');
+    } else {
+      onNavigate(page);
+    }
     setMenuOpen(false);
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-950/97 backdrop-blur-md
-      border-b-2 border-brand-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-[70px]">
+    <header className="fixed top-0 left-0 right-0 z-50 h-[70px]
+      bg-gray-950/95 backdrop-blur-md border-b border-gray-800">
 
-        {/* Logo */}
-        <button onClick={() => go('home')} className="flex items-center gap-2.5 group">
-          <div className="bg-brand-700 group-hover:bg-brand-800 transition-colors
-            px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-            <Wrench className="w-4 h-4 text-white" strokeWidth={2.5} />
-            <span className="text-white font-extrabold text-sm tracking-wide">ESCALANTE</span>
+      <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
+        
+        <button onClick={() => go('home')} className="flex items-center gap-2">
+          <div className="bg-red-600 px-2.5 py-1.5 rounded-lg">
+            <span className="text-white font-extrabold text-xs tracking-wide">ESC</span>
           </div>
           <div className="hidden sm:block text-left">
-            <div className="text-gray-400 text-[11px] uppercase tracking-widest leading-tight">
-              Auto Repair · Utah
-            </div>
+            <p className="text-white font-extrabold text-sm leading-tight">Escalante</p>
+            <p className="text-gray-500 text-[10px]">Auto Repair</p>
           </div>
         </button>
 
-        {/* Desktop nav */}
-        <ul className="hidden md:flex items-center gap-7">
+        <nav className="hidden md:flex items-center gap-1">
           {NAV_LINKS.map(({ label, page }) => (
-            <li key={page}>
-              <button
-                onClick={() => go(page)}
-                className={`text-sm font-medium uppercase tracking-wide transition-colors duration-150
-                  ${currentPage === page
-                    ? 'text-red-400'
-                    : 'text-gray-400 hover:text-red-400'}`}
-              >
-                {label}
-              </button>
-            </li>
+            <button
+              key={page}
+              onClick={() => go(page)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                ${currentPage === page
+                  ? 'text-red-400 bg-red-900/20'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                }`}
+            >
+              {label}
+            </button>
           ))}
-        </ul>
+        </nav>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          
           <button
-            onClick={onToggleDark}
-            aria-label="Toggle dark mode"
-            className="p-2 rounded-lg border border-gray-700 text-gray-400
-              hover:border-brand-700 hover:text-red-400 transition-all duration-150"
+            onClick={() => go('portal')}
+            className="flex items-center gap-2 px-4 py-2 bg-white 
+              text-gray-900 text-sm font-medium rounded-lg 
+              hover:bg-gray-100 transition-colors"
           >
-            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <Wrench className="w-4 h-4" />
+            <span className="hidden sm:inline">Portal</span>
           </button>
 
-          <Button variant="ghost" size="sm" onClick={() => go('portal')}>
-            Login
-          </Button>
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => go('portal')}
-            className="hidden sm:inline-flex"
-          >
-            <CalendarDays className="w-4 h-4" />
-            Book Now
-          </Button>
-
           <button
-            className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
-            onClick={() => setMenuOpen(o => !o)}
-            aria-label="Toggle menu"
+            className="md:hidden p-2 text-gray-400 hover:bg-gray-800 rounded-lg"
+            onClick={() => setMenuOpen(m => !m)}
           >
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
-
-      {/* Mobile drawer */}
-      {menuOpen && (
-        <div className="md:hidden bg-gray-950 border-t border-gray-800 px-4 py-4 flex flex-col gap-2">
-          {NAV_LINKS.map(({ label, page }) => (
-            <button
-              key={page}
-              onClick={() => go(page)}
-              className="text-left text-sm text-gray-300 hover:text-red-400 py-2
-                border-b border-gray-800/50 transition-colors"
-            >
-              {label}
-            </button>
-          ))}
-          <div className="pt-2 flex flex-col gap-2">
-            <Button variant="ghost" size="sm" onClick={() => go('portal')}>Login</Button>
-            <Button variant="primary" size="sm" onClick={() => go('portal')}>
-              <CalendarDays className="w-4 h-4" /> Book Now
-            </Button>
-          </div>
-        </div>
-      )}
-    </nav>
+    </header>
   );
 }

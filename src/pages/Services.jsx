@@ -13,20 +13,19 @@ export default function Services({ onNavigate }) {
           subtitle="Transparent pricing, expert technicians, and a guarantee on every job we do."
         />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {SERVICES.map(s => (
-            <div
-              key={s.title}
+          {SERVICES.map(({ title, Icon, desc, price }) => (
+            <div key={title}
               className="group bg-white dark:bg-gray-800 rounded-xl p-6
                 border border-gray-200 dark:border-gray-700
                 hover:-translate-y-1.5 hover:shadow-xl hover:border-red-300 dark:hover:border-brand-700
-                transition-all duration-200 relative overflow-hidden"
-            >
+                transition-all duration-200 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-brand-700
                 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-              <div className="text-3xl mb-3">{s.icon}</div>
-              <h3 className="font-bold mb-2 text-gray-900 dark:text-white">{s.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{s.desc}</p>
-              <p className="mt-4 text-brand-700 dark:text-red-400 font-bold text-sm">{s.price}</p>
+              {/* ✅ FIX: Lucide icon instead of emoji */}
+              <Icon className="w-8 h-8 text-brand-700 dark:text-red-400 mb-3" strokeWidth={1.75} />
+              <h3 className="font-bold mb-2 text-gray-900 dark:text-white">{title}</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{desc}</p>
+              <p className="mt-4 text-brand-700 dark:text-red-400 font-bold text-sm">{price}</p>
             </div>
           ))}
         </div>

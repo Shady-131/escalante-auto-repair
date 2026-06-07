@@ -1,3 +1,42 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Brand palette ──────────────────────────────────────────────────────────
+   Deep "auto-shop red" used for primary buttons, accents, focus rings, etc.
+   These tokens back every `brand-*` utility (bg-brand-700, text-brand-700,
+   border-brand-700, ring-brand-700 …). Without them those utilities emit no
+   CSS and primary buttons render with no background. */
+@theme {
+  --color-brand-50:  #fef2f2;
+  --color-brand-100: #fde4e4;
+  --color-brand-200: #fbcccc;
+  --color-brand-300: #f4a8a8;
+  --color-brand-400: #ea6d6d;
+  --color-brand-500: #db3d3d;
+  --color-brand-600: #c22626;
+  --color-brand-700: #a51d1d;
+  --color-brand-800: #8b1a1a;
+  --color-brand-900: #741818;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0);    }
+  50%       { transform: translateY(-10px); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  .animate-fade-in    { animation: fade-in    0.2s ease-out both;           }
+  .animate-bounce-slow { animation: bounce-slow 2.4s ease-in-out infinite; }
+  .animate-spin-slow  { animation: spin-slow  3s   linear      infinite;   }
+}

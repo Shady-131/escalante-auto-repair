@@ -19,7 +19,7 @@ const ABOUT_STATS = [
 
 export default function About() {
   return (
-    <main className="py-16 px-6 min-h-screen bg-white dark:bg-gray-950">
+    <main className="py-10 sm:py-14 md:py-16 px-4 sm:px-6 min-h-screen bg-white dark:bg-gray-950">
       <div className="max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-12 items-start">
           <div>
@@ -47,7 +47,7 @@ export default function About() {
           </div>
 
           <div className="bg-gradient-to-br from-gray-900 via-[#1a0505] to-gray-900
-            rounded-2xl p-8 border-2 border-red-900/40 text-center">
+            rounded-2xl p-5 sm:p-8 border-2 border-red-900/40 text-center">
             {/* ✅ FIX: replaced 🔧 emoji with Lucide Wrench icon */}
             <div className="flex justify-center mb-4">
               <Wrench className="w-20 h-20 text-red-500/70" strokeWidth={1} />

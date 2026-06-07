@@ -1,4 +1,5 @@
 import { Phone, MapPin, MessageCircle } from 'lucide-react';
+import defaultLogo from '../../assets/logo.png';
 
 const LINKS = ['home', 'services', 'about', 'contact'];
 
@@ -9,9 +10,11 @@ export default function Footer({ onNavigate }) {
         {/* Brand */}
         <div>
           <div className="flex items-center gap-2 mb-4">
-            <div className="bg-brand-700 px-2.5 py-1.5 rounded-lg">
-              <span className="text-white font-extrabold text-xs">ESC</span>
-            </div>
+            <img
+              src={defaultLogo}
+              alt="Escalante Auto Repair"
+              className="h-10 w-auto max-w-[120px] object-contain rounded-lg"
+            />
             <div>
               <p className="text-white font-bold text-sm">Escalante Auto Repair</p>
               <p className="text-gray-500 text-xs">Utah's Trusted Mechanics</p>

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Phone, MapPin, Clock, MessageCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import SectionHeader from '../components/ui/SectionHeader';
@@ -40,12 +41,18 @@ const INFO_CARDS = [
 ];
 
 export default function Contact({ showToast }) {
+  const formRef = useRef(null);
+
   function handleSubmit() {
-    showToast("✅ Message sent! We'll contact you within 24 hours.");
+    if (!formRef.current?.checkValidity()) {
+      formRef.current?.reportValidity();
+      return;
+    }
+    showToast("✅ Message received! We'll contact you within 24 hours.");
   }
 
   return (
-    <main className="py-16 px-6 min-h-screen bg-white dark:bg-gray-950">
+    <main className="py-10 sm:py-14 md:py-16 px-4 sm:px-6 min-h-screen bg-white dark:bg-gray-950">
       <div className="max-w-7xl mx-auto">
         <SectionHeader badge="Get In Touch" title="Contact Us" />
         <div className="grid md:grid-cols-5 gap-8">
@@ -72,37 +79,39 @@ export default function Contact({ showToast }) {
           <div className="md:col-span-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-6
             border border-gray-200 dark:border-gray-700">
             <h3 className="font-bold text-lg mb-5 text-gray-900 dark:text-white">Send Us a Message</h3>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <InputField id="fname" label="First Name" placeholder="John" />
-              <InputField id="lname" label="Last Name" placeholder="Doe" />
-            </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <InputField id="email" label="Email" type="email" placeholder="you@email.com" />
-              <InputField id="phone" label="Phone" type="tel" placeholder="+1 435-000-0000" />
-            </div>
-            <div className="mb-4">
-              <InputField id="service" label="Service Needed" as="select">
-                <option>Select a service...</option>
-                <option>Engine Repair</option>
-                <option>Brake Service</option>
-                <option>Oil Change</option>
-                <option>AC Service</option>
-                <option>Transmission</option>
-                <option>Electrical</option>
-                <option>Other</option>
-              </InputField>
-            </div>
-            <div className="mb-5">
-              <InputField
-                id="msg"
-                label="Message"
-                as="textarea"
-                placeholder="Describe your vehicle issue..."
-              />
-            </div>
-            <Button variant="primary" size="lg" className="w-full justify-center" onClick={handleSubmit}>
-              Send Message
-            </Button>
+            <form ref={formRef} noValidate onSubmit={e => e.preventDefault()}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <InputField id="fname" label="First Name" placeholder="John" required />
+                <InputField id="lname" label="Last Name" placeholder="Doe" required />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <InputField id="email" label="Email" type="email" placeholder="you@email.com" required />
+                <InputField id="phone" label="Phone" type="tel" placeholder="+1 435-000-0000" />
+              </div>
+              <div className="mb-4">
+                <InputField id="service" label="Service Needed" as="select">
+                  <option>Select a service...</option>
+                  <option>Engine Repair</option>
+                  <option>Brake Service</option>
+                  <option>Oil Change</option>
+                  <option>AC Service</option>
+                  <option>Transmission</option>
+                  <option>Electrical</option>
+                  <option>Other</option>
+                </InputField>
+              </div>
+              <div className="mb-5">
+                <InputField
+                  id="msg"
+                  label="Message"
+                  as="textarea"
+                  placeholder="Describe your vehicle issue..."
+                />
+              </div>
+              <Button variant="primary" size="lg" className="w-full justify-center" onClick={handleSubmit}>
+                Send Message
+              </Button>
+            </form>
           </div>
         </div>
       </div>

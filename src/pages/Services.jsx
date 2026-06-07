@@ -1,11 +1,12 @@
 import Button from '../components/ui/Button';
 import SectionHeader from '../components/ui/SectionHeader';
-import { SERVICES } from '../data/mockData';
+import { useServices } from '../hooks/useServices';
 import { CalendarDays } from 'lucide-react';
 
 export default function Services({ onNavigate }) {
+  const { services } = useServices();
   return (
-    <main className="py-16 px-6 min-h-screen bg-white dark:bg-gray-950">
+    <main className="py-10 sm:py-14 md:py-16 px-4 sm:px-6 min-h-screen bg-white dark:bg-gray-950">
       <div className="max-w-7xl mx-auto">
         <SectionHeader
           badge="Full Service Menu"
@@ -13,7 +14,7 @@ export default function Services({ onNavigate }) {
           subtitle="Transparent pricing, expert technicians, and a guarantee on every job we do."
         />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {SERVICES.map(({ title, Icon, desc, price }) => (
+          {services.map(({ title, Icon, desc, price }) => (
             <div key={title}
               className="group bg-white dark:bg-gray-800 rounded-xl p-6
                 border border-gray-200 dark:border-gray-700

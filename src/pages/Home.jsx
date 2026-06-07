@@ -1,7 +1,9 @@
-import { Phone, CalendarDays, Star, MapPin, ArrowDown, Car } from 'lucide-react';
+import { Phone, CalendarDays, Star, MapPin, ArrowDown } from 'lucide-react';
 import Button from '../components/ui/Button';
 import SectionHeader from '../components/ui/SectionHeader';
-import { SERVICES, REVIEWS } from '../data/mockData';
+import { REVIEWS } from '../data/mockData';
+import { useServices } from '../hooks/useServices';
+import chargerCar from '../assets/charger.png';
 
 const STATS = [
   { num: '10+',  label: 'Years Exp.'    },
@@ -11,6 +13,7 @@ const STATS = [
 ];
 
 export default function Home({ onNavigate }) {
+  const { services } = useServices();
   return (
     <main>
       {/* HERO */}
@@ -24,8 +27,8 @@ export default function Home({ onNavigate }) {
           }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-6 py-20
-          grid md:grid-cols-2 gap-12 items-center w-full">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-20
+          grid md:grid-cols-2 gap-8 md:gap-12 items-center w-full">
           <div>
             <span className="inline-flex items-center gap-2 bg-red-900/30 border border-red-800/50
               text-red-300 text-xs px-3 py-1.5 rounded-full uppercase tracking-widest mb-6 font-semibold">
@@ -33,7 +36,7 @@ export default function Home({ onNavigate }) {
               Trusted Auto Repair in Utah
             </span>
 
-            <h1 className="text-5xl md:text-6xl font-black text-white leading-[1.08] mb-5">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-[1.08] mb-5">
               Your Car Deserves<br />
               <span className="text-red-500">Expert Care</span>
             </h1>
@@ -54,7 +57,7 @@ export default function Home({ onNavigate }) {
               </Button>
             </div>
 
-            <div className="flex flex-wrap gap-8">
+            <div className="flex flex-wrap gap-5 sm:gap-8">
               {STATS.map(s => (
                 <div key={s.label} className="text-center">
                   <div className="text-2xl font-black text-red-400">{s.num}</div>
@@ -66,11 +69,16 @@ export default function Home({ onNavigate }) {
             </div>
           </div>
 
-          {/* ✅ FIX: replaced emoji 🚗 with Lucide Car icon */}
-          <div className="hidden md:flex flex-col items-center justify-center gap-4">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-red-800/20 blur-3xl scale-150 pointer-events-none" />
-              <Car className="relative w-48 h-48 text-red-500/80" strokeWidth={0.75} />
+          <div className="flex flex-col items-center justify-center gap-4
+            mt-2 mb-12 -translate-x-2 -translate-y-2 mx-auto
+            md:mt-0 md:mb-0 md:translate-x-0 md:translate-y-0">
+            <div className="relative w-full max-w-[340px] sm:max-w-[460px] lg:max-w-[600px]">
+              <div className="absolute inset-0 rounded-full bg-red-900/25 blur-3xl scale-125 pointer-events-none" />
+              <img
+                src={chargerCar}
+                alt="Classic American muscle car illustration"
+                className="relative w-full max-w-full object-contain"
+              />
             </div>
             <div className="text-center">
               <div className="text-gray-600 text-xs uppercase tracking-widest">Utah's Finest</div>
@@ -80,14 +88,14 @@ export default function Home({ onNavigate }) {
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-gray-600
-          flex flex-col items-center gap-1 animate-bounce-slow select-none">
+          hidden md:flex flex-col items-center gap-1 animate-bounce-slow select-none pointer-events-none">
           <ArrowDown className="w-4 h-4" />
           <span className="text-[10px] uppercase tracking-widest">Scroll</span>
         </div>
       </section>
 
       {/* SERVICES OVERVIEW */}
-      <section className="bg-gray-50 dark:bg-gray-900 py-20 px-6">
+      <section className="bg-gray-50 dark:bg-gray-900 py-12 sm:py-16 md:py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <SectionHeader
             badge="Our Services"
@@ -95,7 +103,7 @@ export default function Home({ onNavigate }) {
             subtitle="Full-range auto repair from routine maintenance to complex engine work. No job too big or too small."
           />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {SERVICES.slice(0, 6).map(({ title, Icon, desc, price }) => (
+            {services.slice(0, 6).map(({ title, Icon, desc, price }) => (
               <div key={title}
                 className="group bg-white dark:bg-gray-800 rounded-xl p-6
                   border border-gray-200 dark:border-gray-700
@@ -120,7 +128,7 @@ export default function Home({ onNavigate }) {
       </section>
 
       {/* REVIEWS */}
-      <section className="py-20 px-6 bg-white dark:bg-gray-950">
+      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-white dark:bg-gray-950">
         <div className="max-w-7xl mx-auto">
           <SectionHeader badge="Customer Reviews" title="What Our Customers Say" />
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -154,7 +162,7 @@ export default function Home({ onNavigate }) {
       </section>
 
       {/* MAP CTA */}
-      <section className="bg-gray-50 dark:bg-gray-900 py-16 px-6">
+      <section className="bg-gray-50 dark:bg-gray-900 py-10 sm:py-14 md:py-16 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-10 items-center">
           <div>
             <span className="inline-flex items-center gap-1.5

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   CalendarDays, CheckCircle, Clock, MapPin,
-  CreditCard, Star, Wrench, Car,
+  CreditCard, Wrench, Car,
   ArrowRight, AlertCircle, Phone,
 } from 'lucide-react';
 import Badge from '../../components/ui/Badge';
@@ -9,7 +9,8 @@ import Button from '../../components/ui/Button';
 import StatCard from '../../components/ui/StatCard';
 import InputField from '../../components/ui/InputField';
 import UploadZone from '../../components/ui/UploadZone';
-import { CUSTOMER_HISTORY, TRACK_STEPS, SERVICES } from '../../data/mockData';
+import { CUSTOMER_HISTORY, TRACK_STEPS } from '../../data/mockData';
+import { useServices } from '../../hooks/useServices';
 
 /* ─── Overview ────────────────────────────────────────────────────────────── */
 function OverviewView({ user, onChangeView }) {
@@ -84,6 +85,7 @@ function OverviewView({ user, onChangeView }) {
 
 /* ─── Book Appointment ────────────────────────────────────────────────────── */
 function BookView({ showToast, addBooking }) {
+  const { services } = useServices();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ vehicle: '', year: '', service: '', date: '', time: '', notes: '' });
 
@@ -143,7 +145,7 @@ function BookView({ showToast, addBooking }) {
         {step === 1 && (
           <div className="space-y-4">
             <h3 className="text-white font-bold text-lg">Your Vehicle</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InputField label="Make & Model" id="make" placeholder="e.g. Honda Civic"
                 value={form.vehicle} onChange={e => set('vehicle', e.target.value)} />
               <InputField label="Year" id="year" placeholder="e.g. 2019"
@@ -156,7 +158,7 @@ function BookView({ showToast, addBooking }) {
           <div className="space-y-4">
             <h3 className="text-white font-bold text-lg">Select Service</h3>
             <div className="grid sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
-              {SERVICES.map(({ title, Icon, price }) => (
+              {services.map(({ title, Icon, price }) => (
                 <button key={title} onClick={() => set('service', title)}
                   className={`text-left p-3 rounded-xl border text-sm transition-all
                     ${form.service === title
@@ -174,7 +176,7 @@ function BookView({ showToast, addBooking }) {
         {step === 3 && (
           <div className="space-y-4">
             <h3 className="text-white font-bold text-lg">Pick a Date & Time</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InputField label="Preferred Date" id="date" type="date"
                 value={form.date} onChange={e => set('date', e.target.value)} />
               <InputField label="Preferred Time" id="time" as="select"
@@ -256,7 +258,7 @@ function HistoryView() {
           </table>
         </div>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <StatCard value="5"    label="Total Services" />
         <StatCard value="$392" label="Total Spent"    />
         <StatCard value="2"    label="Vehicles"       />
@@ -397,7 +399,7 @@ function PaymentView({ showToast }) {
         </div>
         <div className="divide-y divide-gray-800">
           {INVOICES.map(inv => (
-            <div key={inv.id} className="flex items-center justify-between px-5 py-4 gap-4">
+            <div key={inv.id} className="flex items-start sm:items-center justify-between px-4 sm:px-5 py-3 sm:py-4 gap-3 flex-wrap sm:flex-nowrap">
               <div>
                 <p className="text-red-400 font-mono text-xs font-bold">{inv.id}</p>
                 <p className="text-white text-sm font-semibold mt-0.5">{inv.service}</p>

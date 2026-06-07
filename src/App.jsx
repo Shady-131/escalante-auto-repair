@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './hooks/useAuth';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import FloatingButtons from './components/floating/FloatingButtons';
@@ -14,32 +15,49 @@ import { useBookings } from './hooks/useBookings';
 
 const PUBLIC_PAGES = ['home', 'services', 'about', 'contact', 'portal'];
 
-export default function App() {
-  const [currentPage, setCurrentPage] = useState('home');
-  // خلينا اليوزر الافتراضي Customer عشان يفتح عليه أول ما تعمل Login
-  const [user, setUser] = useState({ role: 'customer', name: 'John Doe' }); 
-  const { message, showToast } = useToast();
-  const bookingsApi = useBookings();
+const LOGO_KEY = 'esc_logo';
 
-  // إجبار الموقع كله إنه يشتغل على الـ Dark Mode دايماً
+export default function App() {
+  // ── Auth comes from context — no local user state needed ──────────────────
+  const { user, logout } = useAuth();
+
+  const [currentPage, setCurrentPage] = useState('home');
+  const { message, showToast }        = useToast();
+  const bookingsApi                   = useBookings();
+
+  // ── Logo — persisted in localStorage so it survives page refreshes ────────
+  const [logo, setLogoState] = useState(() => {
+    try { return localStorage.getItem(LOGO_KEY) || null; } catch { return null; }
+  });
+  function setLogo(dataUrl) {
+    setLogoState(dataUrl);
+    try {
+      if (dataUrl) localStorage.setItem(LOGO_KEY, dataUrl);
+      else         localStorage.removeItem(LOGO_KEY);
+    } catch { /* storage full */ }
+  }
+
+  // Enforce dark mode globally (as per your architectural decision)
   useEffect(() => {
     document.documentElement.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
   }, []);
 
-  function handleLogin(userData) {
-    // لو مفيش داتا مبعوتة، هيدخل كعميل كحالة افتراضية
-    setUser(userData || { role: 'customer', name: 'John Doe' });
+  // If a session was restored from localStorage on load and we're on a public
+  // page, stay there — don't auto-redirect. Only redirect after an explicit login.
+  function handleLogin() {
     setCurrentPage('dashboard');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleLogout() {
-    setUser(null);
+    logout();                    // clears AuthContext + localStorage session
     setCurrentPage('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleNavigate(page) {
-    if (page === 'portal') {
+    // If the user clicks "Portal" while already logged in → go straight to dashboard
+    if (page === 'portal' && user) {
       setCurrentPage('dashboard');
     } else {
       setCurrentPage(page);
@@ -47,24 +65,13 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // الدالة السحرية للتبديل بين الأدوار
-  function toggleRole() {
-    setUser(prev => ({
-      ...prev,
-      role: prev?.role === 'admin' ? 'customer' : 'admin',
-      name: prev?.role === 'admin' ? 'John Doe' : 'Mechanic Team'
-    }));
-  }
-
   const showPublicLayout = PUBLIC_PAGES.includes(currentPage);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white transition-colors duration-200">
+
       {showPublicLayout && (
-        <Navbar
-          currentPage={currentPage}
-          onNavigate={handleNavigate}
-        />
+        <Navbar currentPage={currentPage} onNavigate={handleNavigate} logo={logo} />
       )}
 
       <div className={showPublicLayout ? 'pt-[70px]' : ''}>
@@ -80,7 +87,8 @@ export default function App() {
             onNavigate={handleNavigate}
             showToast={showToast}
             bookingsApi={bookingsApi}
-            onToggleRole={toggleRole} // بعتنا الدالة للداشبورد
+            logo={logo}
+            setLogo={setLogo}
           />
         )}
       </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Users, Menu } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
+import DashboardFooter from '../components/layout/DashboardFooter';
 import AdminDashboard from './dashboard/AdminDashboard';
 import CustomerDashboard from './dashboard/CustomerDashboard';
 
@@ -88,17 +89,24 @@ export default function Dashboard({ user, onLogout, onNavigate, showToast, booki
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-950">
-          {isAdmin
-            ? <AdminDashboard activeView={activeView} bookingsApi={bookingsApi} showToast={showToast} logo={logo} setLogo={setLogo} />
-            : <CustomerDashboard
-                activeView={activeView}
-                onChangeView={handleChangeView}
-                user={user}
-                bookingsApi={bookingsApi}
-                showToast={showToast}
-              />
-          }
+        <main className="flex-1 overflow-y-auto bg-gray-950 flex flex-col min-w-0">
+          {/* Content grows to fill the viewport so the footer is pushed to the
+              bottom on short pages and sits right after content on long ones. */}
+          <div className="flex-1 p-4 sm:p-6">
+            {isAdmin
+              ? <AdminDashboard activeView={activeView} bookingsApi={bookingsApi} showToast={showToast} logo={logo} setLogo={setLogo} />
+              : <CustomerDashboard
+                  activeView={activeView}
+                  onChangeView={handleChangeView}
+                  user={user}
+                  bookingsApi={bookingsApi}
+                  showToast={showToast}
+                />
+            }
+          </div>
+
+          {/* Footer is customer-only — the admin dashboard intentionally omits it. */}
+          {!isAdmin && <DashboardFooter onChangeView={handleChangeView} logo={logo} />}
         </main>
       </div>
     </div>

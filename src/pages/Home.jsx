@@ -70,8 +70,8 @@ export default function Home({ onNavigate }) {
           </div>
 
           <div className="flex flex-col items-center justify-center gap-4
-            mt-2 mb-12 -translate-x-2 -translate-y-2 mx-auto
-            md:mt-0 md:mb-0 md:translate-x-0 md:translate-y-0">
+            mt-2 mb-12 mx-auto
+            md:mt-0 md:mb-0">
             <div className="relative w-full max-w-[340px] sm:max-w-[460px] lg:max-w-[600px]">
               <div className="absolute inset-0 rounded-full bg-red-900/25 blur-3xl scale-125 pointer-events-none" />
               <img

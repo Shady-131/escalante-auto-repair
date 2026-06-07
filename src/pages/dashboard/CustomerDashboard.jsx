@@ -13,10 +13,10 @@ import { CUSTOMER_HISTORY, TRACK_STEPS } from '../../data/mockData';
 import { useServices } from '../../hooks/useServices';
 
 /* ─── Overview ────────────────────────────────────────────────────────────── */
-function OverviewView({ user, onChangeView }) {
-  const UPCOMING = [
-    { id: 'ESC-2026-047', service: 'Brake Pad Replacement', date: 'Apr 20, 2026', time: '9:00 AM', status: 'In Progress' },
-  ];
+function OverviewView({ user, bookings, onChangeView }) {
+  // Active = anything not finished or cancelled. Bookings are newest-first.
+  const active = bookings.filter(b => b.status !== 'Completed' && b.status !== 'Cancelled');
+  const latest = active[0];
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -27,8 +27,19 @@ function OverviewView({ user, onChangeView }) {
           <p className="text-red-400 text-xs uppercase tracking-widest font-semibold mb-1">Welcome back</p>
           <h2 className="text-white text-2xl font-extrabold">{user?.name}</h2>
           <p className="text-gray-400 text-sm mt-1">
-            You have <strong className="text-white">1 active repair</strong> and your vehicle is{' '}
-            <strong className="text-yellow-400">In Progress</strong>.
+            {active.length > 0 ? (
+              <>
+                You have{' '}
+                <strong className="text-white">
+                  {active.length} active repair{active.length > 1 ? 's' : ''}
+                </strong>
+                {latest && (
+                  <> — currently <strong className="text-yellow-400">{latest.status}</strong></>
+                )}.
+              </>
+            ) : (
+              <>No active repairs right now. Book a service to get started.</>
+            )}
           </p>
         </div>
         {/* ✅ FIX: replaced 🚗 emoji with Lucide Car icon */}
@@ -36,10 +47,10 @@ function OverviewView({ user, onChangeView }) {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard value="3"    label="Total Visits"  sub="All time"   />
-        <StatCard value="1"    label="Active Jobs"   sub="Right now"  />
-        <StatCard value="$392" label="Total Spent"   sub="This year"  />
-        <StatCard value="5★"   label="Your Rating"   sub="Thank you!" />
+        <StatCard value={String(bookings.length)} label="Total Visits"  sub="All time"   />
+        <StatCard value={String(active.length)}   label="Active Jobs"   sub="Right now"  />
+        <StatCard value="$392"                     label="Total Spent"   sub="This year"  />
+        <StatCard value="5★"                       label="Your Rating"   sub="Thank you!" />
       </div>
 
       {/* Active repair */}
@@ -47,17 +58,28 @@ function OverviewView({ user, onChangeView }) {
         <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
           <Wrench className="w-4 h-4 text-red-400" /> Current Repair
         </h3>
-        {UPCOMING.map(job => (
-          <div key={job.id}
-            className="flex items-center justify-between gap-4 bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-            <div>
-              <p className="text-red-400 font-mono text-xs font-bold mb-0.5">{job.id}</p>
-              <p className="text-white font-semibold">{job.service}</p>
-              <p className="text-gray-400 text-sm">{job.date} · {job.time}</p>
-            </div>
-            <Badge status={job.status} />
+        {active.length > 0 ? (
+          <div className="space-y-3">
+            {active.map(job => (
+              <div key={job.id}
+                className="flex items-center justify-between gap-4 bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                <div className="min-w-0">
+                  <p className="text-red-400 font-mono text-xs font-bold mb-0.5">{job.id}</p>
+                  <p className="text-white font-semibold">{job.service}</p>
+                  <p className="text-gray-400 text-sm">{job.vehicle} · {job.date}</p>
+                </div>
+                <Badge status={job.status} />
+              </div>
+            ))}
           </div>
-        ))}
+        ) : (
+          <div className="text-center py-6">
+            <p className="text-gray-400 text-sm mb-3">You have no active repairs right now.</p>
+            <Button variant="primary" size="sm" onClick={() => onChangeView('book')}>
+              <CalendarDays className="w-4 h-4" /> Book a Service
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* ✅ FIX: Quick actions now call onChangeView to navigate */}
@@ -84,7 +106,7 @@ function OverviewView({ user, onChangeView }) {
 }
 
 /* ─── Book Appointment ────────────────────────────────────────────────────── */
-function BookView({ showToast, addBooking }) {
+function BookView({ showToast, addBooking, user }) {
   const { services } = useServices();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ vehicle: '', year: '', service: '', date: '', time: '', notes: '' });
@@ -100,7 +122,7 @@ function BookView({ showToast, addBooking }) {
 
   function handleConfirm() {
     const id = `ESC-2026-0${Math.floor(Math.random() * 90) + 10}`;
-    addBooking({ id, customer: 'John Doe', vehicle: `${form.year} ${form.vehicle}`,
+    addBooking({ id, customer: user?.name ?? 'Guest', vehicle: `${form.year} ${form.vehicle}`,
       service: form.service, date: form.date, status: 'Scheduled' });
     showToast(`✅ Appointment booked! ID: ${id}`);
     setStep(1);
@@ -421,11 +443,13 @@ function PaymentView({ showToast }) {
 
 /* ─── Main ────────────────────────────────────────────────────────────────── */
 export default function CustomerDashboard({ activeView, onChangeView, user, bookingsApi, showToast }) {
-  const { addBooking } = bookingsApi;
+  const { addBooking, bookings } = bookingsApi;
+  // Only show the signed-in customer's own bookings (matched by name).
+  const myBookings = bookings.filter(b => b.customer === user?.name);
   return (
     <div>
-      {activeView === 'overview' && <OverviewView user={user} onChangeView={onChangeView} />}
-      {activeView === 'book'     && <BookView     showToast={showToast} addBooking={addBooking} />}
+      {activeView === 'overview' && <OverviewView user={user} bookings={myBookings} onChangeView={onChangeView} />}
+      {activeView === 'book'     && <BookView     showToast={showToast} addBooking={addBooking} user={user} />}
       {activeView === 'history'  && <HistoryView  />}
       {activeView === 'track'    && <TrackView    />}
       {activeView === 'upload'   && <UploadView   showToast={showToast} />}

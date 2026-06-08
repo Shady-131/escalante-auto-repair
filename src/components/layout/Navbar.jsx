@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Menu, X, Wrench } from 'lucide-react';
+import { Menu, X, LogIn } from 'lucide-react';
 import defaultLogo from '../../assets/logo.png';
 
 const NAV_LINKS = [
@@ -60,8 +60,8 @@ export default function Navbar({ currentPage, onNavigate, logo }) {
               text-gray-900 text-sm font-medium rounded-lg
               hover:bg-gray-100 transition-colors"
           >
-            <Wrench className="w-4 h-4" />
-            <span className="hidden sm:inline">Portal</span>
+            <LogIn className="w-4 h-4" />
+            <span>Sign In</span>
           </button>
 
           <button
@@ -92,15 +92,6 @@ export default function Navbar({ currentPage, onNavigate, logo }) {
               {label}
             </button>
           ))}
-          <button
-            onClick={() => go('portal')}
-            className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium
-              text-gray-400 hover:text-white hover:bg-gray-800 transition-colors
-              flex items-center gap-2 mt-1 border-t border-gray-800 pt-3"
-          >
-            <Wrench className="w-4 h-4" />
-            Customer Portal
-          </button>
         </nav>
       )}
     </header>

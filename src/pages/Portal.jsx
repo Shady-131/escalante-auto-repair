@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   Wrench, Lock, Eye, EyeOff,
   LogIn, UserPlus, ShieldCheck, ChevronRight,
-  User, Upload,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Button from '../components/ui/Button';
@@ -13,22 +12,6 @@ const TABS = [
   { id: 'login',    label: 'Sign In',      Icon: LogIn       },
   { id: 'register', label: 'Register',     Icon: UserPlus    },
   { id: 'staff',    label: 'Staff Access', Icon: ShieldCheck },
-];
-
-// ─── Role selector options ────────────────────────────────────────────────────
-const ROLE_OPTIONS = [
-  {
-    value: 'customer',
-    label: 'Customer',
-    desc:  'Book appointments & track your repairs',
-    icon:  '👤',
-  },
-  {
-    value: 'admin',
-    label: 'Mechanic / Admin',
-    desc:  'Staff access — requires an invite code',
-    icon:  '🔧',
-  },
 ];
 
 // ─── Small helper: password visibility toggle ─────────────────────────────────
@@ -73,8 +56,7 @@ export default function Portal({ onLogin }) {
   const [lf, setLF] = useState({ email: '', password: '' });
   const [rf, setRF] = useState({
     firstName: '', lastName: '', email: '', phone: '',
-    password: '', confirm: '', role: 'customer', inviteCode: '',
-    photo: null,
+    password: '', confirm: '',
   });
   const [sf, setSF] = useState({ email: '', password: '' });
 
@@ -102,7 +84,7 @@ export default function Portal({ onLogin }) {
 
   // ── Register handler ───────────────────────────────────────────────────────
   function handleRegister() {
-    const { firstName, lastName, email, password, confirm, role, inviteCode, phone } = rf;
+    const { firstName, lastName, email, password, confirm, phone } = rf;
     if (!firstName || !lastName || !email || !password) {
       flash_('Please fill in all required fields.'); return;
     }
@@ -110,7 +92,9 @@ export default function Portal({ onLogin }) {
     if (password !== confirm) { flash_('Passwords do not match.'); return; }
 
     setLoading(true);
-    const res = register({ firstName, lastName, email, phone, password, role, inviteCode, photo: rf.photo });
+    // Public registration always creates a customer account. Staff accounts are
+    // provisioned by the shop owner (see Staff Access tab).
+    const res = register({ firstName, lastName, email, phone, password, role: 'customer' });
     setLoading(false);
 
     if (!res.ok) { flash_(res.error); return; }
@@ -273,93 +257,6 @@ export default function Portal({ onLogin }) {
                   placeholder="Repeat password"
                   value={rf.confirm} onChange={e => R('confirm', e.target.value)} />
 
-                {/* Role selector */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
-                    Account Type
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {ROLE_OPTIONS.map(opt => (
-                      <button key={opt.value} type="button"
-                        onClick={() => R('role', opt.value)}
-                        className={`text-left p-3 rounded-xl border transition-all
-                          ${rf.role === opt.value
-                            ? 'border-red-600 bg-red-900/20 text-white'
-                            : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-800/40'}`}>
-                        <p className="font-semibold text-xs flex items-center gap-1.5">
-                          <span>{opt.icon}</span> {opt.label}
-                        </p>
-                        <p className="text-gray-500 mt-0.5 text-[11px] leading-snug">{opt.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Invite code + photo — slides in when Mechanic/Admin is selected */}
-                {rf.role === 'admin' && (
-                  <>
-                    <div className="animate-fade-in space-y-2">
-                      <div className="flex items-start gap-2 bg-amber-900/10 border border-amber-700/30
-                        rounded-xl p-3 text-xs text-amber-400">
-                        <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                        Staff registration requires a valid invite code provided by the shop owner.
-                      </div>
-                      <InputField id="r-invite" label="Staff Invite Code"
-                        placeholder="ESC-XXXX-XXXX"
-                        value={rf.inviteCode} onChange={e => R('inviteCode', e.target.value)} />
-                    </div>
-
-                    {/* Profile photo upload */}
-                    <div className="animate-fade-in">
-                      <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
-                        Profile Photo <span className="text-gray-600 normal-case font-normal">(optional)</span>
-                      </label>
-                      <div className="flex items-center gap-4">
-                        {/* Avatar preview */}
-                        <div className="w-14 h-14 rounded-full bg-gray-800 border-2 border-gray-700
-                          flex items-center justify-center overflow-hidden shrink-0">
-                          {rf.photo
-                            ? <img src={rf.photo} alt="Preview" className="w-full h-full object-cover" />
-                            : <User className="w-6 h-6 text-gray-500" strokeWidth={1.5} />
-                          }
-                        </div>
-                        {/* File input */}
-                        <div className="flex-1 min-w-0">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            id="r-photo"
-                            className="hidden"
-                            onChange={e => {
-                              const file = e.target.files[0];
-                              if (!file) return;
-                              if (file.size > 2 * 1024 * 1024) { flash_('Image must be under 2MB.'); return; }
-                              const reader = new FileReader();
-                              reader.onload = ev => R('photo', ev.target.result);
-                              reader.readAsDataURL(file);
-                            }}
-                          />
-                          <label htmlFor="r-photo"
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl
-                              border border-dashed border-gray-600 hover:border-red-600
-                              text-gray-400 hover:text-red-400 text-xs font-medium
-                              cursor-pointer transition-all">
-                            <Upload className="w-3.5 h-3.5" />
-                            {rf.photo ? 'Change photo' : 'Upload photo'}
-                          </label>
-                          {rf.photo && (
-                            <button type="button" onClick={() => R('photo', null)}
-                              className="block mt-1.5 text-[11px] text-gray-600 hover:text-red-400 transition-colors">
-                              Remove
-                            </button>
-                          )}
-                          <p className="text-gray-600 text-[11px] mt-1">JPG, PNG · max 2 MB</p>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
                 <Button variant="primary" size="lg"
                   className="w-full justify-center mt-1"
                   onClick={handleRegister} disabled={loading}>
@@ -406,6 +303,11 @@ export default function Portal({ onLogin }) {
                   <ShieldCheck className="w-4 h-4" />
                   {loading ? 'Verifying…' : 'Staff Sign In'}
                 </Button>
+
+                <p className="text-[11px] text-gray-500 leading-relaxed text-center px-2">
+                  Staff accounts are created by the shop owner. If you're a mechanic or
+                  admin and don't have credentials yet, please contact the shop.
+                </p>
 
                 <div className="pt-2 border-t border-gray-800 text-center">
                   <button onClick={() => demoLogin('admin')}

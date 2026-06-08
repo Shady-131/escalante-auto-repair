@@ -25,7 +25,20 @@ const SEED_USERS = [
     password: 'customer123',
     role: 'customer',
   },
+  {
+    id: 'u003',
+    firstName: 'Mike', lastName: 'Torres',
+    name: 'Mike Torres',
+    email: 'mechanic@escalante.com',
+    phone: '+1 435-555-0102',
+    password: 'mechanic123',
+    role: 'mechanic',
+  },
 ];
+
+// Seeded demo accounts can't be deleted from Staff Management (they always
+// re-seed on reload). Exported so the UI can disable their delete button.
+export const SEED_USER_IDS = SEED_USERS.map(u => u.id);
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
 function readUsers() {
@@ -119,11 +132,56 @@ export function AuthProvider({ children }) {
     return { ok: true, user: session };
   }, [users]);
 
+  // ── addStaff (admin-only: create a mechanic) ─────────────────────────────────
+  // Creates a role:'mechanic' account WITHOUT changing the current session, so
+  // the admin stays logged in. Authorization to call this is enforced in the UI
+  // (Staff Management is admin-only) — production must re-check this server-side.
+  const addStaff = useCallback(({
+    name, firstName, lastName, email, phone, password, photo, specialty, notes,
+  }) => {
+    const emailLower = (email || '').trim().toLowerCase();
+    if (!emailLower || !password) {
+      return { ok: false, error: 'Email and a password are required.' };
+    }
+    if (users.some(u => u.email.toLowerCase() === emailLower)) {
+      return { ok: false, error: 'An account with this email already exists.' };
+    }
+
+    const fullName = (name || `${firstName || ''} ${lastName || ''}`).trim();
+    const parts    = fullName.split(/\s+/);
+    const newUser  = {
+      id:        `u${Date.now()}`,
+      firstName: firstName || parts[0] || '',
+      lastName:  lastName  || parts.slice(1).join(' ') || '',
+      name:      fullName || emailLower,
+      email:     emailLower,
+      phone:     (phone || '').trim(),
+      password,                 // plain-text is fine for a frontend demo
+      role:      'mechanic',    // staff added this way are always mechanics
+      photo:     photo || null,
+      specialty: (specialty || '').trim(),
+      notes:     (notes || '').trim(),
+    };
+
+    setUsers(prev => [...prev, newUser]);
+    return { ok: true, user: newUser };
+  }, [users]);
+
+  // ── deleteStaff (admin-only) ─────────────────────────────────────────────────
+  const deleteStaff = useCallback((id) => {
+    // Seeded demo accounts can't be removed — they'd reappear on reload anyway.
+    if (SEED_USERS.some(u => u.id === id)) {
+      return { ok: false, error: 'Demo accounts cannot be removed.' };
+    }
+    setUsers(prev => prev.filter(u => u.id !== id));
+    return { ok: true };
+  }, []);
+
   // ── logout ─────────────────────────────────────────────────────────────────
   const logout = useCallback(() => setUser(null), []);
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, users, login, register, addStaff, deleteStaff, logout }}>
       {children}
     </AuthContext.Provider>
   );

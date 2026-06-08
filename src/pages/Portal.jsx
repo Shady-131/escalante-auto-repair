@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import {
-  Wrench, Lock, Eye, EyeOff,
-  LogIn, UserPlus, ShieldCheck, ChevronRight,
+  Wrench, Eye, EyeOff,
+  LogIn, UserPlus, ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Button from '../components/ui/Button';
 import InputField from '../components/ui/InputField';
 
 // ─── Tab config ───────────────────────────────────────────────────────────────
+// A single universal Sign In handles every role (customer / mechanic / admin);
+// routing to the right dashboard happens after login based on the saved role.
 const TABS = [
-  { id: 'login',    label: 'Sign In',      Icon: LogIn       },
-  { id: 'register', label: 'Register',     Icon: UserPlus    },
-  { id: 'staff',    label: 'Staff Access', Icon: ShieldCheck },
+  { id: 'login',    label: 'Sign In',  Icon: LogIn    },
+  { id: 'register', label: 'Register', Icon: UserPlus },
 ];
 
 // ─── Small helper: password visibility toggle ─────────────────────────────────
@@ -58,12 +59,10 @@ export default function Portal({ onLogin }) {
     firstName: '', lastName: '', email: '', phone: '',
     password: '', confirm: '',
   });
-  const [sf, setSF] = useState({ email: '', password: '' });
 
   // Helpers
   const L = (k, v) => setLF(f => ({ ...f, [k]: v }));
   const R = (k, v) => setRF(f => ({ ...f, [k]: v }));
-  const S = (k, v) => setSF(f => ({ ...f, [k]: v }));
 
   function flash_(text, type = 'error') {
     setFlash({ text, type });
@@ -92,8 +91,8 @@ export default function Portal({ onLogin }) {
     if (password !== confirm) { flash_('Passwords do not match.'); return; }
 
     setLoading(true);
-    // Public registration always creates a customer account. Staff accounts are
-    // provisioned by the shop owner (see Staff Access tab).
+    // Public registration always creates a customer account. Staff (mechanic /
+    // admin) accounts are provisioned by the shop owner, never self-registered.
     const res = register({ firstName, lastName, email, phone, password, role: 'customer' });
     setLoading(false);
 
@@ -102,22 +101,13 @@ export default function Portal({ onLogin }) {
     setTimeout(() => onLogin(), 900);
   }
 
-  // ── Staff login handler ────────────────────────────────────────────────────
-  function handleStaffLogin() {
-    if (!sf.email || !sf.password) { flash_('Please enter your staff credentials.'); return; }
-    setLoading(true);
-    const res = login(sf.email, sf.password);
-    setLoading(false);
-    if (!res.ok)                      { flash_(res.error);                                        return; }
-    if (res.user.role !== 'admin')    { flash_('This account does not have staff privileges.');   return; }
-    onLogin();
-  }
-
   // ── Demo quick-login ───────────────────────────────────────────────────────
   function demoLogin(role) {
-    const creds = role === 'admin'
-      ? { email: 'admin@escalante.com', password: 'admin123' }
-      : { email: 'john@demo.com',       password: 'customer123' };
+    const creds = {
+      admin:    { email: 'admin@escalante.com',    password: 'admin123'    },
+      mechanic: { email: 'mechanic@escalante.com', password: 'mechanic123' },
+      customer: { email: 'john@demo.com',          password: 'customer123' },
+    }[role] ?? { email: 'john@demo.com', password: 'customer123' };
     const res = login(creds.email, creds.password);
     if (res.ok) onLogin();
   }
@@ -202,14 +192,16 @@ export default function Portal({ onLogin }) {
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { role: 'customer', label: 'Customer Demo' },
-                      { role: 'admin',    label: 'Admin Demo'    },
-                    ].map(({ role, label }) => (
+                      { role: 'customer', label: 'Customer Demo', Icon: UserPlus    },
+                      { role: 'mechanic', label: 'Mechanic Demo', Icon: Wrench      },
+                      { role: 'admin',    label: 'Admin Demo',    Icon: ShieldCheck, full: true },
+                    ].map(({ role, label, Icon, full }) => (
                       <button key={role} onClick={() => demoLogin(role)}
-                        className="py-2 px-3 rounded-xl border border-gray-700 text-gray-400
+                        className={`py-2 px-3 rounded-xl border border-gray-700 text-gray-400
                           hover:border-red-700 hover:text-red-400 hover:bg-red-900/10
-                          text-xs font-medium transition-all flex items-center justify-center gap-1.5">
-                        {role === 'admin' ? <ShieldCheck className="w-3.5 h-3.5" /> : <UserPlus className="w-3.5 h-3.5" />}
+                          text-xs font-medium transition-all flex items-center justify-center gap-1.5
+                          ${full ? 'col-span-2' : ''}`}>
+                        <Icon className="w-3.5 h-3.5" />
                         {label}
                       </button>
                     ))}
@@ -229,6 +221,9 @@ export default function Portal({ onLogin }) {
             {/* ──────────────────── REGISTER ──────────────────── */}
             {tab === 'register' && (
               <div className="space-y-3 animate-fade-in">
+                <p className="text-xs text-gray-500 leading-relaxed text-center px-2 -mt-1 mb-1">
+                  Create a free account to book services and track your repairs.
+                </p>
                 <div className="grid grid-cols-2 gap-3">
                   <InputField id="r-first" label="First Name" placeholder="John"
                     value={rf.firstName} onChange={e => R('firstName', e.target.value)} />
@@ -271,52 +266,13 @@ export default function Portal({ onLogin }) {
                     Sign in
                   </button>
                 </p>
-              </div>
-            )}
 
-            {/* ──────────────────── STAFF ACCESS ──────────────────── */}
-            {tab === 'staff' && (
-              <div className="space-y-4 animate-fade-in">
-                <div className="flex items-start gap-3 bg-red-900/10 border border-red-800/40
-                  rounded-xl p-3">
-                  <Lock className="w-4 h-4 text-red-500 shrink-0 mt-0.5" strokeWidth={1.75} />
-                  <p className="text-xs text-red-400 leading-relaxed">
-                    Mechanic &amp; Admin access only. Unauthorized access attempts are prohibited.
-                  </p>
-                </div>
-
-                <InputField id="s-email" label="Staff Email" type="email"
-                  placeholder="admin@escalante.com"
-                  value={sf.email} onChange={e => S('email', e.target.value)} />
-
-                <div className="relative">
-                  <InputField id="s-pass" label="Password"
-                    type={showPw ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={sf.password} onChange={e => S('password', e.target.value)} />
-                  <EyeToggle show={showPw} onToggle={() => setShowPw(v => !v)} />
-                </div>
-
-                <Button variant="danger" size="lg"
-                  className="w-full justify-center"
-                  onClick={handleStaffLogin} disabled={loading}>
-                  <ShieldCheck className="w-4 h-4" />
-                  {loading ? 'Verifying…' : 'Staff Sign In'}
-                </Button>
-
-                <p className="text-[11px] text-gray-500 leading-relaxed text-center px-2">
-                  Staff accounts are created by the shop owner. If you're a mechanic or
-                  admin and don't have credentials yet, please contact the shop.
+                {/* Mechanic onboarding note — staff accounts are never self-served */}
+                <p className="text-center text-[11px] text-gray-600 leading-relaxed
+                  border-t border-gray-800 pt-3 px-2">
+                  Want to join the team? Staff accounts are set up by the shop —
+                  please <span className="text-gray-400 font-medium">contact us to apply as a mechanic</span>.
                 </p>
-
-                <div className="pt-2 border-t border-gray-800 text-center">
-                  <button onClick={() => demoLogin('admin')}
-                    className="text-xs text-gray-600 hover:text-red-400 transition-colors
-                      flex items-center gap-1 mx-auto">
-                    Use demo admin credentials
-                    <ChevronRight className="w-3 h-3" />
-                  </button>
-                </div>
               </div>
             )}
 

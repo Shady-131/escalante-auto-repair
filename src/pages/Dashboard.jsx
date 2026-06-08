@@ -4,21 +4,24 @@ import Sidebar from '../components/layout/Sidebar';
 import DashboardFooter from '../components/layout/DashboardFooter';
 import AdminDashboard from './dashboard/AdminDashboard';
 import CustomerDashboard from './dashboard/CustomerDashboard';
+import { isStaffRole } from '../lib/permissions';
 
 export default function Dashboard({ user, onLogout, onNavigate, showToast, bookingsApi, logo, setLogo }) {
   const realRole = user?.role ?? 'customer';
-  // Only real admins may preview the other role. Customers are locked to their
-  // own view and can never escalate into the admin dashboard.
+  // Only real admins may preview the customer view. Mechanics are locked to the
+  // staff dashboard; customers can never escalate into a staff dashboard.
   const canSwitchRole = realRole === 'admin';
   const [previewRole,  setPreviewRole]  = useState(realRole);
   const [activeView,   setActiveView]   = useState('overview');
   const [sidebarOpen,  setSidebarOpen]  = useState(false);
 
-  // Admin view requires BOTH a real admin account and an admin preview.
-  const isAdmin = canSwitchRole && previewRole === 'admin';
+  // The effective role drives every gate. Only admins can override it (preview).
+  const effectiveRole = canSwitchRole ? previewRole : realRole;
+  const isStaff = isStaffRole(effectiveRole);          // mechanic OR admin → staff dashboard
+  const isAdmin = effectiveRole === 'admin';
 
   const handleRoleSwitch = () => {
-    if (!canSwitchRole) return;   // guard: customers cannot toggle roles
+    if (!canSwitchRole) return;   // guard: only admins can toggle roles
     setPreviewRole(r => (r === 'admin' ? 'customer' : 'admin'));
     setActiveView('overview');
   };
@@ -31,7 +34,7 @@ export default function Dashboard({ user, onLogout, onNavigate, showToast, booki
   return (
     <div className="flex min-h-screen bg-gray-950">
       <Sidebar
-        role={previewRole}
+        role={effectiveRole}
         user={user}
         activeView={activeView}
         onChangeView={handleChangeView}
@@ -57,7 +60,7 @@ export default function Dashboard({ user, onLogout, onNavigate, showToast, booki
           {/* Title */}
           <div className="flex-1 min-w-0">
             <h1 className="text-white font-extrabold text-base leading-tight truncate">
-              {isAdmin ? 'Admin Dashboard' : 'Customer Portal'}
+              {!isStaff ? 'Customer Portal' : isAdmin ? 'Admin Dashboard' : 'Mechanic Dashboard'}
             </h1>
             <p className="text-gray-500 text-xs truncate">
               Welcome back, <span className="text-red-400 font-semibold">{user?.name}</span>
@@ -93,8 +96,16 @@ export default function Dashboard({ user, onLogout, onNavigate, showToast, booki
           {/* Content grows to fill the viewport so the footer is pushed to the
               bottom on short pages and sits right after content on long ones. */}
           <div className="flex-1 p-4 sm:p-6">
-            {isAdmin
-              ? <AdminDashboard activeView={activeView} bookingsApi={bookingsApi} showToast={showToast} logo={logo} setLogo={setLogo} />
+            {isStaff
+              ? <AdminDashboard
+                  role={effectiveRole}
+                  activeView={activeView}
+                  onChangeView={handleChangeView}
+                  bookingsApi={bookingsApi}
+                  showToast={showToast}
+                  logo={logo}
+                  setLogo={setLogo}
+                />
               : <CustomerDashboard
                   activeView={activeView}
                   onChangeView={handleChangeView}
@@ -105,8 +116,8 @@ export default function Dashboard({ user, onLogout, onNavigate, showToast, booki
             }
           </div>
 
-          {/* Footer is customer-only — the admin dashboard intentionally omits it. */}
-          {!isAdmin && <DashboardFooter onChangeView={handleChangeView} logo={logo} />}
+          {/* Footer is customer-only — the staff dashboard intentionally omits it. */}
+          {!isStaff && <DashboardFooter onChangeView={handleChangeView} logo={logo} />}
         </main>
       </div>
     </div>

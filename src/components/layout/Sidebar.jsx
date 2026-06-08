@@ -1,8 +1,9 @@
 import {
   LayoutDashboard, CalendarDays, ClipboardList, MapPin,
   Camera, CreditCard, BarChart2, Image,
-  StickyNote, LogOut, ChevronRight, Package, Settings2, Tag,
+  StickyNote, LogOut, ChevronRight, Package, Settings2, Tag, Users,
 } from 'lucide-react';
+import { isStaffRole, ADMIN_ONLY_VIEWS, roleLabel } from '../../lib/permissions';
 
 const CUSTOMER_NAV = [
   { icon: LayoutDashboard, label: 'Overview',         view: 'overview' },
@@ -19,11 +20,17 @@ const ADMIN_NAV = [
   { icon: Image,        label: 'Before / After',   view: 'photos'     },
   { icon: StickyNote,   label: 'Technician Notes', view: 'notes'      },
   { icon: Tag,          label: 'Service Prices',   view: 'service-prices' },
+  { icon: Users,        label: 'Staff Management', view: 'staff'      },
   { icon: Settings2,    label: 'Shop Settings',    view: 'settings'   },
 ];
 
 export default function Sidebar({ role, user, activeView, onChangeView, onLogout, isOpen, onClose, logo }) {
-  const navItems = role === 'admin' ? ADMIN_NAV : CUSTOMER_NAV;
+  // Staff see the staff nav; mechanics get it minus the admin-only (business) items.
+  const navItems = !isStaffRole(role)
+    ? CUSTOMER_NAV
+    : role === 'admin'
+      ? ADMIN_NAV
+      : ADMIN_NAV.filter(item => !ADMIN_ONLY_VIEWS.includes(item.view));
   const initials = user?.name
     ?.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() ?? 'U';
 
@@ -65,14 +72,16 @@ export default function Sidebar({ role, user, activeView, onChangeView, onLogout
         {/* User info */}
         <div className="px-4 py-5 border-b border-gray-800">
           <div className="w-11 h-11 rounded-full bg-red-600 flex items-center justify-center
-            font-bold text-white text-sm mb-3">
-            {initials}
+            font-bold text-white text-sm mb-3 overflow-hidden">
+            {user?.photo
+              ? <img src={user.photo} alt={user?.name ?? 'User'} className="w-full h-full object-cover" />
+              : initials}
           </div>
           <p className="text-white font-semibold text-sm leading-tight truncate">
             {user?.name ?? 'User'}
           </p>
           <p className="text-red-400 text-[11px] uppercase tracking-widest mt-0.5">
-            {role === 'admin' ? 'Mechanic · Admin' : 'Customer'}
+            {roleLabel(role)}
           </p>
         </div>
 

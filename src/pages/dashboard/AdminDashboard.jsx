@@ -3,7 +3,7 @@ import {
   BarChart2, TrendingUp, Users, CheckCircle,
   Save, StickyNote, Search, Upload, Trash2, Edit3,
   Package, Plus, Minus, AlertTriangle, Filter, Wrench,
-  X, RotateCcw,
+  X, RotateCcw, Lock, User,
 } from 'lucide-react';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
@@ -11,6 +11,9 @@ import InputField from '../../components/ui/InputField';
 import UploadZone from '../../components/ui/UploadZone';
 import { STATUS_OPTIONS, INITIAL_PARTS } from '../../data/mockData';
 import { useServices } from '../../hooks/useServices';
+import { useAuth } from '../../hooks/useAuth';
+import { canAccessView, canManageInventory } from '../../lib/permissions';
+import { SEED_USER_IDS } from '../../context/AuthContext';
 
 const PARTS_KEY = 'esc_parts';
 
@@ -191,7 +194,7 @@ function OverviewView({ bookings, updateStatus, showToast }) {
 }
 
 /* ─── 2. Inventory (Spare Parts) ─────────────────────────────────────────── */
-function InventoryView({ showToast }) {
+function InventoryView({ showToast, canManage = false }) {
   const [parts, setParts] = useState(() => {
     try {
       const saved = localStorage.getItem(PARTS_KEY);
@@ -260,6 +263,14 @@ function InventoryView({ showToast }) {
 
   return (
     <div className="space-y-5 animate-fade-in">
+      {!canManage && (
+        <div className="flex items-start gap-2 bg-gray-800/40 border border-gray-700/60
+          rounded-xl p-3 text-xs text-gray-400">
+          <Lock className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-500" />
+          Read-only inventory view. Admin access is required to edit parts.
+        </div>
+      )}
+
       {lowStock.length > 0 && (
         <div className="bg-orange-900/20 border border-orange-700/40 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
@@ -289,13 +300,15 @@ function InventoryView({ showToast }) {
           className="px-4 py-2.5 rounded-xl border border-gray-700 bg-gray-900 text-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-700">
           {categories.map(c => <option key={c}>{c}</option>)}
         </select>
-        <Button variant="primary" size="md" onClick={() => setShowAdd(s => !s)}>
-          <Plus className="w-4 h-4" /> Add Part
-        </Button>
+        {canManage && (
+          <Button variant="primary" size="md" onClick={() => setShowAdd(s => !s)}>
+            <Plus className="w-4 h-4" /> Add Part
+          </Button>
+        )}
       </div>
 
       {/* Add new part form */}
-      {showAdd && (
+      {canManage && showAdd && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
           <h3 className="text-white font-bold text-sm">Add New Spare Part</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -321,7 +334,7 @@ function InventoryView({ showToast }) {
           <table className="w-full text-sm">
             <thead className="bg-gray-800/60">
               <tr>
-                {['ID', 'Part Name', 'Category', 'Stock', 'Reorder At', 'Unit Price', 'Status', 'Actions'].map(h => (
+                {['ID', 'Part Name', 'Category', 'Stock', 'Reorder At', 'Unit Price', 'Status', ...(canManage ? ['Actions'] : [])].map(h => (
                   <th key={h} className="text-left text-gray-400 text-xs uppercase tracking-wide px-4 py-3 font-semibold whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -339,9 +352,11 @@ function InventoryView({ showToast }) {
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-sm">{p.reorderAt}</td>
 
-                    {/* Editable price cell */}
+                    {/* Editable price cell (read-only for mechanics) */}
                     <td className="px-4 py-3">
-                      {editingPrice.id === p.id ? (
+                      {!canManage ? (
+                        <span className="text-green-400 font-semibold">${p.price}</span>
+                      ) : editingPrice.id === p.id ? (
                         <div className="flex items-center gap-1">
                           <span className="text-gray-400 text-xs shrink-0">$</span>
                           <input
@@ -376,28 +391,30 @@ function InventoryView({ showToast }) {
                       <Badge status={isLow ? 'Low Stock' : 'In Stock'} />
                     </td>
 
-                    {/* Actions: stock adjust + delete */}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <button onClick={() => adjustStock(p.id, -1)}
-                          className="w-7 h-7 rounded-lg border border-gray-700 flex items-center justify-center text-gray-400 hover:text-red-400 hover:border-brand-700 transition-all">
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <button onClick={() => adjustStock(p.id, 1)}
-                          className="w-7 h-7 rounded-lg border border-gray-700 flex items-center justify-center text-gray-400 hover:text-green-400 hover:border-green-600 transition-all">
-                          <Plus className="w-3 h-3" />
-                        </button>
-                        <button onClick={() => deletePart(p.id)}
-                          className="w-7 h-7 rounded-lg border border-gray-700 flex items-center justify-center text-gray-400 hover:text-red-400 hover:border-red-700 transition-all ml-1">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </td>
+                    {/* Actions: stock adjust + delete (admin only) */}
+                    {canManage && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={() => adjustStock(p.id, -1)}
+                            className="w-7 h-7 rounded-lg border border-gray-700 flex items-center justify-center text-gray-400 hover:text-red-400 hover:border-brand-700 transition-all">
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => adjustStock(p.id, 1)}
+                            className="w-7 h-7 rounded-lg border border-gray-700 flex items-center justify-center text-gray-400 hover:text-green-400 hover:border-green-600 transition-all">
+                            <Plus className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => deletePart(p.id)}
+                            className="w-7 h-7 rounded-lg border border-gray-700 flex items-center justify-center text-gray-400 hover:text-red-400 hover:border-red-700 transition-all ml-1">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan="8" className="px-4 py-8 text-center text-gray-500 text-sm">No parts match your search.</td></tr>
+                <tr><td colSpan={canManage ? 8 : 7} className="px-4 py-8 text-center text-gray-500 text-sm">No parts match your search.</td></tr>
               )}
             </tbody>
           </table>
@@ -737,16 +754,222 @@ function SettingsView({ logo, setLogo, showToast }) {
   );
 }
 
+/* ─── 7. Staff Management (admin-only: add / list mechanics) ─────────────── */
+const SPECIALTY_OPTIONS = [
+  'Mechanic', 'Technician', 'Engine Specialist',
+  'Brake Specialist', 'Electrical Specialist', 'Other',
+];
+const BLANK_STAFF = { name: '', email: '', phone: '', password: '', specialty: 'Mechanic', notes: '', photo: null };
+
+const initialsOf = (name = '') =>
+  name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'M';
+
+function StaffManagementView({ showToast }) {
+  const { users, addStaff, deleteStaff } = useAuth();
+  const [form,    setForm]    = useState(BLANK_STAFF);
+  const [showAdd, setShowAdd] = useState(false);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const mechanics = users.filter(u => u.role === 'mechanic');
+
+  function handlePhoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { showToast('⚠️ Image must be under 2 MB'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => set('photo', ev.target.result);
+    reader.readAsDataURL(file);
+  }
+
+  function handleAdd() {
+    if (!form.name.trim())          { showToast('⚠️ Full name is required.'); return; }
+    if (!form.email.trim())         { showToast('⚠️ Email is required.'); return; }
+    if (form.password.length < 6)   { showToast('⚠️ Password must be at least 6 characters.'); return; }
+    const res = addStaff(form);
+    if (!res.ok) { showToast(`⚠️ ${res.error}`); return; }
+    showToast(`✅ ${res.user.name} added — they can now sign in`);
+    setForm(BLANK_STAFF);
+    setShowAdd(false);
+  }
+
+  function handleDelete(m) {
+    const res = deleteStaff(m.id);
+    if (!res.ok) { showToast(`⚠️ ${res.error}`); return; }
+    showToast(`🗑️ ${m.name} removed`);
+  }
+
+  return (
+    <div className="space-y-5 animate-fade-in">
+      {/* Intro + add toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <p className="text-gray-500 text-xs leading-relaxed max-w-xl">
+          Add mechanics to your shop. They sign in from the normal Sign In tab and
+          land in the mechanic dashboard with staff-only access — they can't manage
+          prices, spare parts, the logo, or shop settings.
+        </p>
+        <Button variant="primary" size="md" onClick={() => setShowAdd(s => !s)}>
+          <Plus className="w-4 h-4" /> Add Mechanic
+        </Button>
+      </div>
+
+      {/* Add mechanic form */}
+      {showAdd && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 space-y-4">
+          <h3 className="text-white font-bold text-sm">New Mechanic</h3>
+
+          {/* Photo + preview */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-gray-800 border-2 border-gray-700
+              flex items-center justify-center overflow-hidden shrink-0">
+              {form.photo
+                ? <img src={form.photo} alt="Preview" className="w-full h-full object-cover" />
+                : <User className="w-7 h-7 text-gray-500" strokeWidth={1.5} />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <input type="file" accept="image/*" id="staff-photo" className="hidden" onChange={handlePhoto} />
+              <label htmlFor="staff-photo"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-dashed
+                  border-gray-600 hover:border-red-600 text-gray-400 hover:text-red-400
+                  text-xs font-medium cursor-pointer transition-all">
+                <Upload className="w-3.5 h-3.5" />
+                {form.photo ? 'Change photo' : 'Upload photo'}
+              </label>
+              {form.photo && (
+                <button type="button" onClick={() => set('photo', null)}
+                  className="block mt-1.5 text-[11px] text-gray-600 hover:text-red-400 transition-colors">
+                  Remove
+                </button>
+              )}
+              <p className="text-gray-600 text-[11px] mt-1">JPG, PNG · max 2 MB (optional)</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InputField label="Full Name"       id="staff-name"  placeholder="e.g. Carlos Reyes"  value={form.name}     onChange={e => set('name',     e.target.value)} />
+            <InputField label="Email"           id="staff-email" type="email" placeholder="carlos@escalante.com" value={form.email} onChange={e => set('email', e.target.value)} />
+            <InputField label="Phone (optional)" id="staff-phone" type="tel" placeholder="+1 435-000-0000" value={form.phone} onChange={e => set('phone', e.target.value)} />
+            <InputField label="Password"        id="staff-pass"  type="password" placeholder="Min. 6 characters" value={form.password} onChange={e => set('password', e.target.value)} />
+            <InputField label="Specialty / Title" id="staff-spec" as="select" value={form.specialty} onChange={e => set('specialty', e.target.value)}>
+              {SPECIALTY_OPTIONS.map(s => <option key={s}>{s}</option>)}
+            </InputField>
+          </div>
+
+          <InputField label="Notes (optional)" id="staff-notes" as="textarea"
+            placeholder="Shift, certifications, etc."
+            value={form.notes} onChange={e => set('notes', e.target.value)} />
+
+          <div className="flex gap-3">
+            <Button variant="primary"   size="md" onClick={handleAdd}>Save Mechanic</Button>
+            <Button variant="secondary" size="md" onClick={() => { setForm(BLANK_STAFF); setShowAdd(false); }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Mechanic list */}
+      <div>
+        <h3 className="text-white font-bold text-sm mb-3">
+          Mechanics <span className="text-gray-600 font-normal">· {mechanics.length}</span>
+        </h3>
+
+        {mechanics.length === 0 ? (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center text-gray-500 text-sm">
+            No mechanics yet. Click “Add Mechanic” to create one.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mechanics.map(m => {
+              const isSeed = SEED_USER_IDS.includes(m.id);
+              return (
+                <div key={m.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center
+                      font-bold text-white text-sm shrink-0 overflow-hidden">
+                      {m.photo
+                        ? <img src={m.photo} alt={m.name} className="w-full h-full object-cover" />
+                        : initialsOf(m.name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-white font-semibold text-sm truncate">{m.name}</p>
+                      <p className="text-red-400 text-[11px] uppercase tracking-wide truncate">
+                        {m.specialty || 'Mechanic'}
+                      </p>
+                    </div>
+                    {!isSeed && (
+                      <button onClick={() => handleDelete(m)} title="Remove mechanic"
+                        className="w-7 h-7 rounded-lg border border-gray-700 flex items-center justify-center
+                          text-gray-400 hover:text-red-400 hover:border-red-700 transition-all shrink-0">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="mt-3 space-y-1 text-xs">
+                    <p className="text-gray-400 truncate">{m.email}</p>
+                    <p className="text-gray-500">{m.phone || '— no phone —'}</p>
+                    {m.notes && <p className="text-gray-600 italic leading-snug pt-1">{m.notes}</p>}
+                  </div>
+
+                  <div className="mt-3 pt-3 border-t border-gray-800 flex items-center justify-between">
+                    <span className="text-gray-500 text-[11px] uppercase tracking-wide">Mechanic</span>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold
+                      text-green-400 bg-green-900/20 border border-green-700/40 px-2 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Active
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Access Restricted (mechanic hitting an admin-only view) ─────────────── */
+function AccessRestricted({ onBack }) {
+  return (
+    <div className="max-w-lg mx-auto mt-10 bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center animate-fade-in">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full
+        bg-red-900/30 border border-red-700/40 mb-4">
+        <Lock className="w-7 h-7 text-red-400" strokeWidth={1.75} />
+      </div>
+      <h3 className="text-white font-extrabold text-lg">Access Restricted</h3>
+      <p className="text-gray-400 text-sm mt-2 leading-relaxed">
+        This section is available to the shop owner / administrator only.
+        Mechanics don't have permission to manage business settings such as
+        spare parts, service prices, or the shop logo.
+      </p>
+      <p className="text-gray-500 text-xs mt-3">
+        If you need a change here, please contact the shop owner.
+      </p>
+      <div className="mt-6">
+        <Button variant="primary" size="md" className="justify-center mx-auto" onClick={onBack}>
+          Back to Overview
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main AdminDashboard Export ──────────────────────────────────────────── */
-export default function AdminDashboard({ activeView, bookingsApi, showToast, logo, setLogo }) {
+export default function AdminDashboard({ role, activeView, onChangeView, bookingsApi, showToast, logo, setLogo }) {
   const { bookings, updateStatus } = bookingsApi;
+
+  // Defense-in-depth: even if a mechanic reaches an admin-only view, block it.
+  // (Real authorization must still be enforced server-side once a backend exists.)
+  if (!canAccessView(role, activeView)) {
+    return <AccessRestricted onBack={() => onChangeView('overview')} />;
+  }
+
   return (
     <div>
       {activeView === 'overview'       && <OverviewView      bookings={bookings} updateStatus={updateStatus} showToast={showToast} />}
-      {activeView === 'inventory'      && <InventoryView     showToast={showToast} />}
+      {activeView === 'inventory'      && <InventoryView     showToast={showToast} canManage={canManageInventory(role)} />}
       {activeView === 'photos'         && <PhotosView        showToast={showToast} />}
       {activeView === 'notes'          && <NotesView         bookings={bookings} showToast={showToast} />}
       {activeView === 'service-prices' && <ServicePricesView showToast={showToast} />}
+      {activeView === 'staff'          && <StaffManagementView showToast={showToast} />}
       {activeView === 'settings'       && <SettingsView      logo={logo} setLogo={setLogo} showToast={showToast} />}
     </div>
   );
